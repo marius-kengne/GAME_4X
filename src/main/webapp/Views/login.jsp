@@ -3,7 +3,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Formulaire</title>
+    <title>Login</title>
     <style>
         /* Style général pour centrer le contenu */
         body {
