@@ -73,7 +73,7 @@
     </style>
 </head>
 <body>
-<form action="LoginController" method="POST">
+<form action="login" method="post">
     <h1> Authentification </h1>
 
     <!-- Affichage des erreurs -->
