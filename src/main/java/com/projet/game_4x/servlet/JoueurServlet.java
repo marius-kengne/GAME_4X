@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.mindrot.jbcrypt.BCrypt;
+
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -17,7 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 // Annotation pour mapper le Servlet à une URL
-@WebServlet(name = " JoueurServlet", value = "/start-game")
+@WebServlet(name = "joueurServlet", value = "/joueur-action")
 public class JoueurServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -39,15 +39,15 @@ public class JoueurServlet extends HttpServlet {
 
     // Méthode pour gérer l'inscription d'un joueur
     private void handleInscription(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String pseudo = request.getParameter("pseudo");
+        String login = request.getParameter("login");
         String email = request.getParameter("email");
         String motDePasse = request.getParameter("mot_de_passe");
 
         try (Connection conn = DatabaseUtils.getConnection()) {
             // Vérification si le pseudo ou l'email existe déjà
-            String checkSql = "SELECT * FROM joueurs WHERE pseudo = ? OR email = ?";
+            String checkSql = "SELECT * FROM joueurs WHERE login = ? OR email = ?";
             PreparedStatement checkStmt = conn.prepareStatement(checkSql);
-            checkStmt.setString(1, pseudo);
+            checkStmt.setString(1, login);
             checkStmt.setString(2, email);
             ResultSet checkRs = checkStmt.executeQuery();
 
@@ -58,9 +58,9 @@ public class JoueurServlet extends HttpServlet {
                 dispatcher.forward(request, response);
             } else {
                 // Insertion du joueur dans la base de données
-                String sql = "INSERT INTO joueurs (pseudo, email, mot_de_passe) VALUES (?, ?, SHA2(?, 256))";
+                String sql = "INSERT INTO joueurs (login, email, mot_de_passe) VALUES (?, ?, SHA2(?, 256))";
                 PreparedStatement stmt = conn.prepareStatement(sql);
-                stmt.setString(1, pseudo);
+                stmt.setString(1, login);
                 stmt.setString(2, email);
                 stmt.setString(3, motDePasse);
                 stmt.executeUpdate();

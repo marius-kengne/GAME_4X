@@ -11,6 +11,7 @@
     <br/>
     <p>
         <a href="login">Login</a><br><br>
+        <a href="inscription">Sign In</a><br>
     </p>
 </div>
 

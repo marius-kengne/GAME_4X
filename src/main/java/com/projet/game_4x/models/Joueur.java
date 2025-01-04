@@ -14,6 +14,7 @@ public class Joueur {
         this.score = score;
         this.pointsProduction = pointsProduction;
     }
+    public Joueur(){}
 
     public int getId() {
         return id;
