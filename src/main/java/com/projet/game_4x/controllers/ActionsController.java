@@ -22,7 +22,7 @@ public class ActionsController extends HttpServlet {
 
         // Récupérer l'action depuis le formulaire
         String action = request.getParameter("action");
-        String message = null;
+        String message;
 
         // Gérer les actions
         switch (action) {
@@ -59,7 +59,7 @@ public class ActionsController extends HttpServlet {
         request.setAttribute("carte", carte);
         request.setAttribute("joueur", joueurs.get(tourActuel));
         request.setAttribute("tourActuel", tourActuel);
-        request.getRequestDispatcher("game.jsp").forward(request, response);
+        request.getRequestDispatcher("/Views/game.jsp").forward(request, response);
     }
 
     private String deplacerSoldat(HttpServletRequest request, Joueur joueur, int dx, int dy, Carte carte) {
@@ -86,29 +86,30 @@ public class ActionsController extends HttpServlet {
         return "Soldat déplacé.";
     }
 
-
     private String soignerSoldat(HttpServletRequest request, Joueur joueur) {
         int x = Integer.parseInt(request.getParameter("x"));
         int y = Integer.parseInt(request.getParameter("y"));
-        /*
-        Tuile tuile = joueur.getCarte().getTuile(x, y);
-        if (tuile != null && tuile.getSoldat() != null) {
+        Carte carte = (Carte) getServletContext().getAttribute("carte");
+
+        Tuile tuile = carte.getTuile(x, y);
+        if (tuile != null && tuile.getSoldat() != null && tuile.getSoldat().getProprietaire().equals(joueur)) {
             Soldat soldat = tuile.getSoldat();
-            soldat.setPointsDeVie(Math.min(10, soldat.getPointsDeVie() + 5)); // Soigne 5 points
+            soldat.soigner(5); // Soigne 5 points
             return "Le soldat a été soigné.";
-        }*/
+        }
         return "Aucun soldat à soigner.";
     }
 
     private String forager(HttpServletRequest request, Joueur joueur) {
         int x = Integer.parseInt(request.getParameter("x"));
         int y = Integer.parseInt(request.getParameter("y"));
+        Carte carte = (Carte) getServletContext().getAttribute("carte");
 
-        /*Tuile tuile = joueur.getCarte().getTuile(x, y);
-        if (tuile != null && tuile.getType().equals("foret")) {
+        Tuile tuile = carte.getTuile(x, y);
+        if (tuile != null && tuile.getType().equals("foret") && tuile.getSoldat() != null && tuile.getSoldat().getProprietaire().equals(joueur)) {
             joueur.setPointsProduction(joueur.getPointsProduction() + 5);
             return "Points de production collectés.";
-        }*/
+        }
         return "Aucune ressource à collecter.";
     }
 }

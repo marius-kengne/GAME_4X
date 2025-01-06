@@ -17,6 +17,7 @@ public class Soldat {
         this.pointsDeDefense = pointsDeDefense;
     }
 
+    // Getters et Setters
     public int getId() {
         return id;
     }
@@ -63,5 +64,17 @@ public class Soldat {
 
     public void setPointsDeDefense(int pointsDeDefense) {
         this.pointsDeDefense = pointsDeDefense;
+    }
+
+    // Méthode pour soigner le soldat
+    public void soigner(int points) {
+        this.pointsDeVie = Math.min(this.pointsDeVie + points, 10); // Limite de points de vie à 10
+    }
+
+    // Méthode pour attaquer un autre soldat
+    public int attaquer(Soldat cible) {
+        int degats = Math.max(this.pointsDAttaque - cible.getPointsDeDefense(), 0); // Dégâts effectifs
+        cible.setPointsDeVie(cible.getPointsDeVie() - degats); // Réduire les points de vie de la cible
+        return degats;
     }
 }
