@@ -25,6 +25,8 @@ public class RegisterController extends HttpServlet {
         String result = inscrireJoueur(request, login, password);
 
         if ("success".equals(result)) {
+            HttpSession session = request.getSession();
+            session.setAttribute("success", "Compte créé avec success");
             response.sendRedirect("login");
         } else {
             request.setAttribute("erreur", result);

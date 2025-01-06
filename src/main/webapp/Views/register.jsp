@@ -101,7 +101,7 @@
     <!-- Affichage des messages -->
     <%
         String errorMessage = (String) request.getAttribute("erreur");
-        String successMessage = (String) request.getAttribute("message");
+        String successMessage = (String) request.getAttribute("success");
     %>
     <% if (errorMessage != null) { %>
     <p class="error-message"><%= errorMessage %></p>
