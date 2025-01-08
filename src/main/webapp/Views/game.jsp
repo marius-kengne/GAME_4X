@@ -6,7 +6,8 @@
     // Récupérer les données de session
     Joueur joueur = (Joueur) session.getAttribute("joueur");
     Carte carte = (Carte) request.getAttribute("carte"); // Injectée par le contrôleur
-    int tourActuel = (int) request.getAttribute("tourActuel");
+    int tourActuel = (int) session.getAttribute("tourActuel");
+    String playerId = (String) joueur.getLogin();
 %>
 <!DOCTYPE html>
 <html>
@@ -105,6 +106,11 @@
             document.getElementById("popup").style.display = "none";
             document.getElementById("popup-overlay").style.display = "none";
         }
+        function showPopupWebsocket(message) {
+            document.getElementById("popup-websocket").style.display = "block";
+            document.getElementById("popup-overlay").style.display = "block";
+            document.getElementById("message-error").innerText = message;
+        }
     </script>
 </head>
 <body>
@@ -120,48 +126,69 @@
     <button class="close-btn" onclick="closePopup()">Fermer</button>
 </div>
 
-<!-- Grille de la carte -->
-<div id="game-board">
-    <table>
-        <c:forEach var="y" begin="0" end="${carte.hauteur - 1}">
-            <tr>
-                <c:forEach var="x" begin="0" end="${carte.largeur - 1}">
-                    <td>
-                        <c:choose>
-                            <c:when test="${carte.getTuile(x, y).type == 'montagne'}">
-                                <img src="resources/icons/Large/mountain.png" alt="Montagne">
-                            </c:when>
-                            <c:when test="${carte.getTuile(x, y).type == 'foret'}">
-                                <img src="resources/icons/Large/forest.png" alt="Forêt">
-                            </c:when>
-                            <c:when test="${carte.getTuile(x, y).type == 'ville'}">
-                                <img src="resources/icons/Large/city.png" alt="Ville">
-                            </c:when>
-                            <c:otherwise>
-                                <c:if test="${carte.getTuile(x, y).soldat != null}">
-                                    <c:choose>
-                                        <c:when test="${carte.getTuile(x, y).soldat.proprietaire.id == joueur.id}">
-                                            <div class="soldat-joueur">
-                                                <img src="resources/icons/Large/soldier.png" alt="Ville">
-                                            </div>
-                                        </c:when>
-                                        <c:otherwise>
-                                            <div class="soldat-adversaire">
-                                                <img src="resources/icons/Large/soldier.png" alt="Ville">
-                                            </div>
-                                        </c:otherwise>
-                                    </c:choose>
-                                </c:if>
-                            </c:otherwise>
-                        </c:choose>
-                    </td>
-                </c:forEach>
-            </tr>
-        </c:forEach>
-    </table>
+<!-- Pop-up erreur websocket-->
+<div id="popup-overlay" class="popup-overlay" onclick="closePopup()"></div>
+<div id="popup-websocket" class="popup">
+    <h3 id="message-error"></h3>
+    <button class="close-btn" onclick="closePopup()">Fermer</button>
 </div>
 
+<!-- Affichage des messages -->
+<%
+    String errorMessage = (String) request.getAttribute("erreur");
+    String successMessage = (String) session.getAttribute("message");
+%>
+<% if (errorMessage != null) { %>
+<p class="error-message"><%= errorMessage %></p>
+<% } %>
+<% if (successMessage != null) { %>
+<p class="success-message"><%= successMessage %></p>
+<% } %>
+
+<!-- Grille de la carte -->
+<div id="game-board">
+    <c:if test="${carte != null}">
+        <table>
+            <c:forEach var="y" begin="0" end="${carte.hauteur - 1}">
+                <tr>
+                    <c:forEach var="x" begin="0" end="${carte.largeur - 1}">
+                        <td>
+                            <c:choose>
+                                <c:when test="${carte.getTuile(x, y) != null && carte.getTuile(x, y).type == 'montagne'}">
+                                    <img src="resources/icons/Large/mountain.png" alt="Montagne">
+                                </c:when>
+                                <c:when test="${carte.getTuile(x, y) != null && carte.getTuile(x, y).type == 'foret'}">
+                                    <img src="resources/icons/Large/forest.png" alt="Forêt">
+                                </c:when>
+                                <c:when test="${carte.getTuile(x, y) != null && carte.getTuile(x, y).type == 'ville'}">
+                                    <img src="resources/icons/Large/city.png" alt="Ville">
+                                </c:when>
+                                <c:otherwise>
+                                    <c:choose>
+                                        <c:when test="${carte.getTuile(x, y) != null && carte.getTuile(x, y).soldat != null && carte.getTuile(x, y).soldat.proprietaire.id == joueur.id}">
+                                            <div class="soldat-joueur">
+                                                <img src="resources/icons/Large/soldier.png" alt="Soldat joueur">
+                                            </div>
+                                        </c:when>
+                                        <c:when test="${carte.getTuile(x, y) != null && carte.getTuile(x, y).soldat != null}">
+                                            <div class="soldat-adversaire">
+                                                <img src="resources/icons/Large/soldier.png" alt="Soldat adversaire">
+                                            </div>
+                                        </c:when>
+                                    </c:choose>
+                                </c:otherwise>
+                            </c:choose>
+                        </td>
+                    </c:forEach>
+                </tr>
+            </c:forEach>
+        </table>
+    </c:if>
+</div>
+
+
 <!-- Actions disponibles -->
+<!--
 <div id="actions">
     <form action="actions" method="post" style="display: flex; gap: 10px; justify-content: center; align-items: center;">
         <button type="submit" name="action" value="moveNorth">Move North</button>
@@ -173,6 +200,79 @@
         <button type="submit" name="action" value="endTurn">End Turn</button>
     </form>
 </div>
+-->
+
+<div id="actions">
+    <form id="deplacementForm" action="deplacerSoldat" method="post" style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+        <label for="soldat">Choisir un soldat :</label>
+        <select name="soldatId" id="soldat" required>
+            <c:forEach var="soldat" items="${joueur.soldats}">
+                <option value="${soldat.id}">
+                    Soldat (${soldat.position.x}, ${soldat.position.y})
+                </option>
+            </c:forEach>
+        </select>
+
+        <!-- Champ caché pour stocker la direction -->
+        <input type="hidden" name="direction" id="directionInput">
+
+        <!-- Boutons pour les directions -->
+        <button type="button" onclick="submitDirection('moveNorth')">↑</button>
+        <button type="button" onclick="submitDirection('moveSouth')">↓</button>
+        <button type="button" onclick="submitDirection('moveEast')">→</button>
+        <button type="button" onclick="submitDirection('moveWest')">←</button>
+    </form>
+</div>
+
+<script>
+    let lastSubmitted = null; // Garde en mémoire la dernière soumission pour éviter les doublons
+
+    function submitDirection(direction) {
+        const now = new Date().getTime();
+
+        // Empêche les soumissions répétées rapides
+        if (lastSubmitted && now - lastSubmitted < 500) {
+            console.warn("Double soumission évitée.");
+            return;
+        }
+
+        lastSubmitted = now;
+
+        // Définir la direction choisie dans le champ caché
+        document.getElementById('directionInput').value = direction;
+        // Soumettre le formulaire
+        document.getElementById('deplacementForm').submit();
+    }
+</script>
+
+
+
+<script>
+
+    // Connecter au WebSocket
+    //const playerId = ${joueur.login}; // Id unique du joueur
+    const socket = new WebSocket(`ws://172.20.10.13:8082/game_4x/gameUpdates/${joueur.login}`);
+
+    // Quand une connexion est ouverte
+    socket.onopen = function () {
+        console.log("Connexion WebSocket ouverte.");
+    };
+
+    // Quand un message est reçu
+    socket.onmessage = function (event) {
+        const message = event.data;
+        // Mettez à jour dynamiquement la page en fonction du message
+        if (message.includes("Le soldat a été déplacé")) {
+            location.reload(); // Exemple simple : recharger la page
+        }
+        console.log("Message reçu : " + message);
+    };
+
+    // Quand une connexion est fermée
+    socket.onclose = function () {
+        console.log("Connexion WebSocket fermée.");
+    };
+</script>
 
 </body>
 </html>

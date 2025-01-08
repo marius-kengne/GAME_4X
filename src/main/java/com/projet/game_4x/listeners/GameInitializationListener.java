@@ -11,15 +11,16 @@ public class GameInitializationListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        // Créer une carte unique pour l'application
-        Carte carte = new Carte(1, 10, 10);
-        carte.genererCarteAleatoire();
+        // Charger ou générer une carte unique pour l'application
+        Carte carte = Carte.chargerOuGenererCarte(10, 10);
 
         // Stocker la carte dans le contexte de l'application
         sce.getServletContext().setAttribute("carte", carte);
+        sce.getServletContext().setAttribute("carteId", carte.getId());
         sce.getServletContext().setAttribute("tourActuel", 0);
 
         System.out.println("Carte initialisée et stockée dans le contexte de l'application.");
+        System.out.println("Carte aléatoire initialisée avec succès (ID : " + carte.getId() + ").");
     }
 
     @Override

@@ -1,7 +1,8 @@
 package com.projet.game_4x.DAO;
 
-import com.oracle.wls.shaded.org.apache.bcel.generic.PUSH;
 import com.projet.game_4x.models.Joueur;
+import com.projet.game_4x.models.Soldat;
+import com.projet.game_4x.models.Tuile;
 
 import java.sql.*;
 
@@ -29,23 +30,58 @@ public class JoueurDAO {
         }
     }
 
-    public static Joueur authenticateJoueur(Connection connection, String login, String password) throws SQLException{
+    public static Joueur authenticateJoueur(Connection connection, String login, String password) throws SQLException {
+        String joueurQuery = "SELECT id, score, points_de_production FROM joueurs WHERE login = ? AND mot_de_passe = ?";
+        PreparedStatement joueurStmt = connection.prepareStatement(joueurQuery);
+        joueurStmt.setString(1, login);
+        joueurStmt.setString(2, password);
 
-        String query = "SELECT id, score, points_de_production FROM joueurs WHERE login = ? AND mot_de_passe = ?";
-        PreparedStatement stmt = connection.prepareStatement(query);
-        stmt.setString(1, login);
-        stmt.setString(2, password);
+        ResultSet joueurResultSet = joueurStmt.executeQuery();
 
-        ResultSet resultSet = stmt.executeQuery();
-
-        if (resultSet.next()) {
-            return new Joueur(
-                    resultSet.getInt("id"),
+        if (joueurResultSet.next()) {
+            // Créer l'instance du joueur
+            Joueur joueur = new Joueur(
+                    joueurResultSet.getInt("id"),
                     login,
                     password,
-                    resultSet.getInt("score"),
-                    resultSet.getInt("points_de_production")
+                    joueurResultSet.getInt("score"),
+                    joueurResultSet.getInt("points_de_production")
             );
+
+            // Charger les soldats du joueur
+            String soldatsQuery = """
+            SELECT s.id, s.position_tuile_id, t.x, t.y, s.points_de_vie, s.points_d_attaque, s.points_de_defense
+            FROM soldats s
+            JOIN tuiles t ON s.position_tuile_id = t.id
+            WHERE s.proprietaire_id = ?
+        """;
+            PreparedStatement soldatsStmt = connection.prepareStatement(soldatsQuery);
+            soldatsStmt.setInt(1, joueur.getId());
+            ResultSet soldatsResultSet = soldatsStmt.executeQuery();
+
+            while (soldatsResultSet.next()) {
+                // Créer chaque soldat
+                Soldat soldat = new Soldat(
+                        soldatsResultSet.getInt("id"),
+                        joueur,
+                        new Tuile(
+                                soldatsResultSet.getInt("position_tuile_id"),
+                                "vide", // Type de tuile par défaut (vous pouvez ajuster si nécessaire)
+                                soldatsResultSet.getInt("x"),
+                                soldatsResultSet.getInt("y"),
+                                null,
+                                0
+                        ),
+                        soldatsResultSet.getInt("points_de_vie"),
+                        soldatsResultSet.getInt("points_d_attaque"),
+                        soldatsResultSet.getInt("points_de_defense")
+                );
+
+                // Ajouter le soldat à la liste du joueur
+                joueur.ajouterSoldat(soldat);
+            }
+
+            return joueur;
         }
         return null;
     }
