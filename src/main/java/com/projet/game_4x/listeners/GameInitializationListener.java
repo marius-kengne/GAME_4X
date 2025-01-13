@@ -11,6 +11,7 @@ public class GameInitializationListener implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+
         // Charger ou générer une carte unique pour l'application
         Carte carte = Carte.chargerOuGenererCarte(10, 10);
 

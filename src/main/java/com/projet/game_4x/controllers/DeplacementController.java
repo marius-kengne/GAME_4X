@@ -1,9 +1,6 @@
 package com.projet.game_4x.controllers;
 
-import com.projet.game_4x.models.Carte;
-import com.projet.game_4x.models.Joueur;
-import com.projet.game_4x.models.Soldat;
-import com.projet.game_4x.models.Tuile;
+import com.projet.game_4x.models.*;
 import com.projet.game_4x.utils.DBConnection;
 import com.projet.game_4x.utils.GameWebSocket;
 import jakarta.servlet.ServletException;
@@ -22,9 +19,18 @@ import java.sql.SQLException;
 public class DeplacementController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        Game game = Game.getInstance();
         HttpSession session = request.getSession();
         Joueur joueur = (Joueur) session.getAttribute("joueur");
         Carte carte = (Carte) getServletContext().getAttribute("carte");
+
+        // Vérifier si c'est le tour du joueur
+        if (game.getCurrentPlayer() != joueur.getId()) {
+            request.setAttribute("erreur", "Ce n'est pas votre tour !");
+            request.getRequestDispatcher("Views/start.jsp").forward(request, response);
+            return;
+        }
 
         if (joueur == null || carte == null) {
             response.sendRedirect("login");
@@ -147,11 +153,13 @@ public class DeplacementController extends HttpServlet {
             // Remettre la carte mise à jour dans le contexte
             getServletContext().setAttribute("carte", carte);
         }*/
-
+        game.nextPlayer();
 
         //request.setAttribute("carte", carte);
         request.setAttribute("tourActuel", getServletContext().getAttribute("tourActuel"));
-        request.getRequestDispatcher("Views/game.jsp").forward(request, response);
+        //request.getRequestDispatcher("Views/game.jsp").forward(request, response);
+        //response.sendRedirect("home");
+        request.getRequestDispatcher("Views/start.jsp").forward(request, response);
     }
 
     private Tuile calculateDestination(String action, Carte carte, Tuile currentPosition) {

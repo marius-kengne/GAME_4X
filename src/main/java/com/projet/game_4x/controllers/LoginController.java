@@ -43,7 +43,8 @@ public class LoginController extends HttpServlet {
             session.setAttribute("joueur", joueur);
             session.setAttribute("tourActuel", 0);
             System.out.println("utilisatuer connecté");
-            response.sendRedirect("game");
+            //response.sendRedirect("game");
+            response.sendRedirect("home");
         } catch (SQLException e) {
             e.printStackTrace();
             request.setAttribute("erreur", "Une erreur est survenue lors de la connexion.");
