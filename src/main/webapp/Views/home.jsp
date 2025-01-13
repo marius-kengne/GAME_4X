@@ -3,6 +3,12 @@
 <%
     // Récupérer les données de session
     Joueur joueur = (Joueur) session.getAttribute("joueur");
+    Game game = (Game) application.getAttribute("game");
+    /*
+    if (game == null) {
+        out.println("<h1>Erreur : le jeu n'a pas encore été initialisé !</h1>");
+        return;
+    }*/
 %>
 <!DOCTYPE html>
 <html>
@@ -50,10 +56,14 @@
 </head>
 <body>
 
-<h1>Bienvenue Sur notre GAME 4X</h1>
+<h1>Bienvenue, ${joueur.login} !</h1>
 
-<form action="login" method="get">
-    <button type="submit">S'authentifier</button>
+<form action="new_game" method="get">
+    <% if (game != null && game.isStart()) { %>
+        <button type="submit">Rejoindre le jeu</button>
+    <% } else { %>
+        <button type="submit">Commencer le jeu</button>
+    <% } %>
 </form>
 
 </body>

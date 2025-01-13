@@ -1,11 +1,15 @@
 package com.projet.game_4x.models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Joueur {
     private int id;
     private String login;
     private String motDePasse;
     private int score;
     private int pointsProduction;
+    private List<Soldat> soldats; // Liste des soldats appartenant au joueur
 
     public Joueur(int id, String login, String motDePasse, int score, int pointsProduction) {
         this.id = id;
@@ -13,8 +17,10 @@ public class Joueur {
         this.motDePasse = motDePasse;
         this.score = score;
         this.pointsProduction = pointsProduction;
+        this.soldats = new ArrayList<>(); // Initialisation de la liste de soldats
     }
 
+    // Getters et Setters
     public int getId() {
         return id;
     }
@@ -53,5 +59,17 @@ public class Joueur {
 
     public void setPointsProduction(int pointsProduction) {
         this.pointsProduction = pointsProduction;
+    }
+
+    public List<Soldat> getSoldats() {
+        return soldats;
+    }
+
+    public void ajouterSoldat(Soldat soldat) {
+        this.soldats.add(soldat); // Ajouter un soldat à la liste
+    }
+
+    public void retirerSoldat(Soldat soldat) {
+        this.soldats.remove(soldat); // Retirer un soldat de la liste
     }
 }
