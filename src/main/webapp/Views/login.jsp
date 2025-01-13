@@ -124,7 +124,7 @@
     </form>
 
     <!-- Lien pour basculer vers l'inscription -->
-    <a class="toggle-link" href="/game_4x/register">Créer un compte</a>
+    <a class="toggle-link" href="/register">Créer un compte</a>
 </div>
 </body>
 </html>

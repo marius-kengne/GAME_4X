@@ -1,5 +1,5 @@
 package com.projet.game_4x.servlet;
-import com.projet.game_4x.utils.DatabaseUtils;
+import com.projet.game_4x.utils.DBConnection;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import org.mindrot.jbcrypt.BCrypt;
+
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -43,7 +43,7 @@ public class JoueurServlet extends HttpServlet {
         String email = request.getParameter("email");
         String motDePasse = request.getParameter("mot_de_passe");
 
-        try (Connection conn = DatabaseUtils.getConnection()) {
+        try (Connection conn = DBConnection.getConnection()) {
             // Vérification si le pseudo ou l'email existe déjà
             String checkSql = "SELECT * FROM joueurs WHERE pseudo = ? OR email = ?";
             PreparedStatement checkStmt = conn.prepareStatement(checkSql);
@@ -74,7 +74,7 @@ public class JoueurServlet extends HttpServlet {
         }
     }
 
-    // Méthode pour gérer la connexion d'un joueur
+
 
 
 

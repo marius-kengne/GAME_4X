@@ -33,7 +33,11 @@ public class FrontControllerServlet extends HttpServlet {
                 throw new ServletException("La carte n'a pas été initialisée.");
             }
 
-            chargerSoldats(connection, carte);
+            // Vérification si l'action est un recrutement pour recharger les soldats
+            String action = request.getParameter("action");
+            if ("recruterSoldat".equals(action)) {
+                chargerSoldats(connection, carte);  // Rafraîchir la carte pour inclure le nouveau soldat
+            }
 
             int tourActuel = (int) getServletContext().getAttribute("tourActuel");
 

@@ -72,4 +72,13 @@ public class Joueur {
     public void retirerSoldat(Soldat soldat) {
         this.soldats.remove(soldat); // Retirer un soldat de la liste
     }
+
+    // Methode pour verifier le nombre de ppoints de productions
+    public boolean peutRecruterSoldat(int coutSoldat){
+        return this.pointsProduction >= coutSoldat ;
+
+    }
+
 }
+
+

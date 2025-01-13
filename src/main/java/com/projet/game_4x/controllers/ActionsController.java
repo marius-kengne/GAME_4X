@@ -1,11 +1,15 @@
 package com.projet.game_4x.controllers;
 
 import com.projet.game_4x.models.*;
-
+import com.projet.game_4x.DAO.JoueurDAO;
+import com.projet.game_4x.utils.DBConnection;
 import jakarta.servlet.*;
-import jakarta.servlet.http.*;
 import jakarta.servlet.annotation.*;
+import jakarta.servlet.http.*;
+
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.List;
 
 @WebServlet(name = "ActionsController", value = "/actions")
@@ -13,14 +17,14 @@ public class ActionsController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Récupérer la carte et les joueurs depuis le contexte
+        // Récupération de la carte et des joueurs depuis le contexte
         Carte carte = (Carte) getServletContext().getAttribute("carte");
         List<Joueur> joueurs = (List<Joueur>) getServletContext().getAttribute("joueurs");
         int tourActuel = (int) getServletContext().getAttribute("tourActuel");
 
         Joueur joueurActuel = joueurs.get(tourActuel);
 
-        // Récupérer l'action depuis le formulaire
+        // Récupération de l'action depuis le formulaire
         String action = request.getParameter("action");
         String message;
 
@@ -44,8 +48,10 @@ public class ActionsController extends HttpServlet {
             case "forage":
                 message = forager(request, joueurActuel);
                 break;
+            case "recruterSoldat":
+                message = recruterSoldat(joueurActuel, carte);
+                break;
             case "endTurn":
-                // Passer au joueur suivant
                 tourActuel = (tourActuel + 1) % joueurs.size();
                 getServletContext().setAttribute("tourActuel", tourActuel);
                 message = "Tour passé au joueur suivant.";
@@ -54,12 +60,43 @@ public class ActionsController extends HttpServlet {
                 message = "Action non reconnue !";
         }
 
-        // Stocker les messages et mettre à jour la vue
+        // Met à jour la vue avec le message
         request.setAttribute("message", message);
         request.setAttribute("carte", carte);
         request.setAttribute("joueur", joueurs.get(tourActuel));
         request.setAttribute("tourActuel", tourActuel);
         request.getRequestDispatcher("/Views/game.jsp").forward(request, response);
+    }
+
+    private String recruterSoldat(Joueur joueur, Carte carte) {
+        final int COUT_RECRUTEMENT_SOLDAT = 15; // Coût en points de production
+
+        if (!joueur.peutRecruterSoldat(COUT_RECRUTEMENT_SOLDAT)) {
+            return "Vous n'avez pas assez de points de production pour recruter un soldat.";
+        }
+
+        try (Connection connection = DBConnection.getConnection()) {
+            // Recherche d'une tuile vide aléatoire via JoueurDAO
+            int tuileId = JoueurDAO.getRandomEmptyTuile(connection, carte.getId());
+            if (tuileId == -1) {
+                return "Aucune tuile vide disponible pour recruter un soldat.";
+            }
+
+            // Recrutement du soldat et mise à jour des points
+            boolean success = JoueurDAO.recruterSoldat(connection, joueur.getId(), tuileId);
+            if (!success) {
+                return "Erreur lors de la création du soldat.";
+            }
+            // Deduire les points de productions dans l'objets joueur
+            int nouveauxPointsProductions = joueur.getPointsProduction() - COUT_RECRUTEMENT_SOLDAT;
+            joueur.setPointsProduction(nouveauxPointsProductions);
+            JoueurDAO.updatePointsProduction(connection, joueur.getId(), joueur.getPointsProduction());
+
+            return "Soldat recruté avec succès.";
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return "Erreur SQL lors du recrutement du soldat : " + e.getMessage();
+        }
     }
 
     private String deplacerSoldat(HttpServletRequest request, Joueur joueur, int dx, int dy, Carte carte) {
@@ -77,7 +114,6 @@ public class ActionsController extends HttpServlet {
             return "Déplacement impossible (montagne ou hors carte).";
         }
 
-        // Déplacer le soldat
         Soldat soldat = origine.getSoldat();
         origine.setSoldat(null);
         destination.setSoldat(soldat);
@@ -93,8 +129,7 @@ public class ActionsController extends HttpServlet {
 
         Tuile tuile = carte.getTuile(x, y);
         if (tuile != null && tuile.getSoldat() != null && tuile.getSoldat().getProprietaire().equals(joueur)) {
-            Soldat soldat = tuile.getSoldat();
-            soldat.soigner(5); // Soigne 5 points
+            tuile.getSoldat().soigner(5); // Soigne 5 points
             return "Le soldat a été soigné.";
         }
         return "Aucun soldat à soigner.";

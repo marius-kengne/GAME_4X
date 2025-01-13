@@ -11,6 +11,7 @@
     <br/>
     <p>
         <a href="login">Login</a><br><br>
+    <a href="register">INSCRIRE</a><br><br>
     </p>
 </div>
 

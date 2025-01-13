@@ -1,16 +1,18 @@
+
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ page import="com.projet.game_4x.models.*" %>
 <%
-    // Récupérer les données de session
+    // Récupération des données de session
     Joueur joueur = (Joueur) session.getAttribute("joueur");
     Carte carte = (Carte) request.getAttribute("carte"); // Injectée par le contrôleur
     int tourActuel = (int) request.getAttribute("tourActuel");
 %>
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
+    <meta charset="UTF-8">
     <title>4X Game - Plateau</title>
     <style>
         body {
@@ -21,6 +23,16 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .score-container {
+            background-color: #e0f7fa;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
         }
         table {
             border-collapse: collapse;
@@ -37,7 +49,7 @@
             width: 40px;
             height: 40px;
         }
-        button {
+        .btn-action {
             padding: 10px 15px;
             font-size: 14px;
             font-weight: bold;
@@ -48,11 +60,12 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
-        button:hover {
-            background-color: #0056b3;
+        .btn-action:disabled {
+            background-color: #b3b3b3;
+            cursor: not-allowed;
         }
-        button:active {
-            background-color: #003f7f;
+        .btn-action:hover:not(:disabled) {
+            background-color: #0056b3;
         }
         .popup {
             min-width: 450px;
@@ -85,38 +98,45 @@
             border: none;
             cursor: pointer;
         }
-        #actions {
-            margin-top: 10px;
-        }
-
-        .soldat-joueur {
-            background-color: green;
-        }
-        .soldat-adversaire {
-            background-color: red;
-        }
     </style>
     <script>
+        // Affichage du pop-up
         function showPopup() {
             document.getElementById("popup").style.display = "block";
             document.getElementById("popup-overlay").style.display = "block";
         }
+
         function closePopup() {
             document.getElementById("popup").style.display = "none";
             document.getElementById("popup-overlay").style.display = "none";
         }
+
+        // Vérification des points de production côté client
+        function verifierPointsProduction(pointsProduction) {
+            const buttonRecruter = document.getElementById("btn-recruter");
+            const coutSoldat = 15;
+            buttonRecruter.disabled = pointsProduction < coutSoldat;
+        }
     </script>
 </head>
-<body>
+<body onload="verifierPointsProduction(${joueur.pointsProduction})">
 
-<h1>Bienvenue, ${joueur.login} !</h1>
-<button onclick="showPopup()">Voir les informations du tour</button>
+<!-- Header avec le score -->
+<div class="header">
+    <h1>Bienvenue, ${joueur.login} !</h1>
+    <div class="score-container">
+        <p><strong>Score actuel : <span id="score">${joueur.score}</span></strong></p>
+        <button class="btn-action" onclick="location.href='${pageContext.request.contextPath}/Views/score.jsp'">Gérer le score</button>
+        <p><strong>Points de production : <span id="points-production">${joueur.pointsProduction}</span></strong></p>
+    </div>
+</div>
 
-<!-- Pop-up -->
+<!-- Pop-up des informations du tour -->
+<button class="btn-action" onclick="showPopup()">Voir les informations du tour</button>
 <div id="popup-overlay" class="popup-overlay" onclick="closePopup()"></div>
 <div id="popup" class="popup">
     <h3>Tour actuel : ${tourActuel}</h3>
-    <h3>Points de production : ${joueur.pointsProduction}</h3>
+    <h3>Points de production : <span id="points-production-popup">${joueur.pointsProduction}</span></h3>
     <button class="close-btn" onclick="closePopup()">Fermer</button>
 </div>
 
@@ -142,12 +162,12 @@
                                     <c:choose>
                                         <c:when test="${carte.getTuile(x, y).soldat.proprietaire.id == joueur.id}">
                                             <div class="soldat-joueur">
-                                                <img src="resources/icons/Large/soldier.png" alt="Ville">
+                                                <img src="resources/icons/Large/soldier.png" alt="Soldat allié">
                                             </div>
                                         </c:when>
                                         <c:otherwise>
                                             <div class="soldat-adversaire">
-                                                <img src="resources/icons/Large/soldier.png" alt="Ville">
+                                                <img src="resources/icons/Large/soldier.png" alt="Soldat ennemi">
                                             </div>
                                         </c:otherwise>
                                     </c:choose>
@@ -162,15 +182,21 @@
 </div>
 
 <!-- Actions disponibles -->
-<div id="actions">
+<div class="actions">
     <form action="actions" method="post" style="display: flex; gap: 10px; justify-content: center; align-items: center;">
-        <button type="submit" name="action" value="moveNorth">Move North</button>
-        <button type="submit" name="action" value="moveSouth">Move South</button>
-        <button type="submit" name="action" value="moveEast">Move East</button>
-        <button type="submit" name="action" value="moveWest">Move West</button>
-        <button type="submit" name="action" value="heal">Heal</button>
-        <button type="submit" name="action" value="forage">Forage</button>
-        <button type="submit" name="action" value="endTurn">End Turn</button>
+        <button type="submit" name="action" value="moveNorth" class="btn-action">Move North</button>
+        <button type="submit" name="action" value="moveSouth" class="btn-action">Move South</button>
+        <button type="submit" name="action" value="moveEast" class="btn-action">Move East</button>
+        <button type="submit" name="action" value="moveWest" class="btn-action">Move West</button>
+        <button type="submit" name="action" value="heal" class="btn-action">Heal</button>
+        <button type="submit" name="action" value="forage" class="btn-action">Forage</button>
+        <button type="submit" name="action" value="endTurn" class="btn-action">End Turn</button>
+    </form>
+
+    <!-- Formulaire spécifique pour recruter un soldat -->
+    <form action="actions" method="post" style="margin-top: 20px;">
+        <input type="hidden" name="action" value="recruterSoldat">
+                <button type="submit" class="btn-action" id="btn-recruter">Recruter un soldat (coût : 15 points)</button>
     </form>
 </div>
 
