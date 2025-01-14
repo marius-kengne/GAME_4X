@@ -1,7 +1,5 @@
 package com.projet.game_4x.listeners;
 
-import com.projet.game_4x.models.Carte;
-
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
@@ -12,6 +10,7 @@ public class GameInitializationListener implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent sce) {
 
+        /*
         // Charger ou générer une carte unique pour l'application
         Carte carte = Carte.chargerOuGenererCarte(10, 10);
 
@@ -22,6 +21,8 @@ public class GameInitializationListener implements ServletContextListener {
 
         System.out.println("Carte initialisée et stockée dans le contexte de l'application.");
         System.out.println("Carte aléatoire initialisée avec succès (ID : " + carte.getId() + ").");
+        */
+        System.out.println("###### passage dans GameInitializationListener");
     }
 
     @Override

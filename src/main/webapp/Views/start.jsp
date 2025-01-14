@@ -5,24 +5,22 @@
     // Récupération des données depuis la session
     Game game = (Game) application.getAttribute("game");
     int playerId = (int) session.getAttribute("playerId");
+    //int playerId = (int) game.getCurrentPlayer();
     if (game == null) {
         out.println("<h1>Erreur : le jeu n'a pas encore été initialisé !</h1>");
         return;
     }
 
     Joueur joueur = (Joueur) session.getAttribute("joueur");
-    Carte carte = game.getCarte();
-    if (carte == null) {
-        out.println("<h1>Erreur : la carte n'a pas encore été définie !</h1>");
-        return;
-    }
 
-    int tourActuel = game.getCurrentPlayer();
+    //int tourActuel = game.getCurrentPlayer();
+    int tourActuel = (int) session.getAttribute("tourActuel");
 %>
 <!DOCTYPE html>
 <html>
 <head>
     <title>4X Game - Plateau</title>
+    <!--meta http-equiv="refresh" content="2"-->
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -144,9 +142,6 @@
 <h1>Bienvenue, ${joueur.login} !</h1>
 <button onclick="showPopup()">Voir les informations du tour</button>
 
-<!-- Message de Notification du tour du Joueur de Jouer -->
-<h2 id="turn-info">Chargement...</h2>
-
 <!-- Pop-up -->
 <div id="popup-overlay" class="popup-overlay" onclick="closePopup()"></div>
 <div id="popup" class="popup">
@@ -165,39 +160,71 @@
     session.removeAttribute("message");
 %>
 
+<!-- Message de Notification du tour du Joueur de Jouer -->
+<h2 id="turn-info">Chargement...</h2>
+
 <% if (erreur != null) { %>
 <div class="error-message" style="color: red;"><%= erreur %></div>
 <% } %>
 
 <% if (message != null) { %>
-<div class="success-message" style="color: green;"><%= message %></div>
+<div class="success-message" style="color: green;">
+    <% if (message.contains("Ville capturée")) { %>
+    <strong>Succès :</strong> <%= message %>
+    <% } else { %>
+    <%= message %>
+    <% } %>
+</div>
 <% } %>
-
 <!-- Grille de la carte -->
 <div id="game-board">
     <table>
-        <c:forEach var="y" begin="0" end="${carte.hauteur - 1}">
+        <c:forEach var="y" begin="0" end="${game.carte.hauteur - 1}">
             <tr>
-                <c:forEach var="x" begin="0" end="${carte.largeur - 1}">
+                <c:forEach var="x" begin="0" end="${game.carte.largeur - 1}">
+                    <%
+                        int currentX = Integer.parseInt(String.valueOf(pageContext.getAttribute("x")));
+                        int currentY = Integer.parseInt(String.valueOf(pageContext.getAttribute("y")));
+                    %>
                     <td>
                         <c:choose>
-                            <c:when test="${carte.getTuile(x, y) != null && carte.getTuile(x, y).type == 'montagne'}">
+                            <c:when test="${game.carte.getTuile(x, y) != null && game.carte.getTuile(x, y).type == 'montagne'}">
                                 <img src="resources/icons/Large/mountain.png" alt="Montagne">
                             </c:when>
-                            <c:when test="${carte.getTuile(x, y) != null && carte.getTuile(x, y).type == 'foret'}">
+                            <c:when test="${game.carte.getTuile(x, y) != null && game.carte.getTuile(x, y).type == 'foret'}">
                                 <img src="resources/icons/Large/forest.png" alt="Forêt">
                             </c:when>
-                            <c:when test="${carte.getTuile(x, y) != null && carte.getTuile(x, y).type == 'ville'}">
-                                <img src="resources/icons/Large/city.png" alt="Ville">
+                            <c:when test="${game.carte.getTuile(x, y) != null && game.carte.getTuile(x, y).type == 'ville'}">
+                                <!--img src="resources/icons/Large/city.png" alt="Ville"-->
+                                <c:choose>
+                                    <c:when test="${game.carte.getTuile(x, y).proprietaire != null && game.carte.getTuile(x, y).proprietaire.id == joueur.id}">
+                                        <!-- Ville capturée par le joueur -->
+                                        <div style="background-color: lightgreen; padding: 5px;">
+                                            <img src="resources/icons/Large/city.png" alt="Ville capturée">
+                                            <p style="font-size: small;">Capturée</p>
+                                        </div>
+                                    </c:when>
+                                    <c:when test="${game.carte.getTuile(x, y).proprietaire != null}">
+                                        <!-- Ville capturée par un autre joueur -->
+                                        <div style="background-color: lightcoral; padding: 5px;">
+                                            <img src="resources/icons/Large/city.png" alt="Ville ennemie">
+                                            <p style="font-size: small;">Par <%= game.getCarte().getTuile(currentX, currentY).getProprietaire().getLogin() %></p>
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <!-- Ville non capturée -->
+                                        <img src="resources/icons/Large/city.png" alt="Ville neutre">
+                                    </c:otherwise>
+                                </c:choose>
                             </c:when>
                             <c:otherwise>
                                 <c:choose>
-                                    <c:when test="${carte.getTuile(x, y) != null && carte.getTuile(x, y).soldat != null && carte.getTuile(x, y).soldat.proprietaire.id == joueur.id}">
+                                    <c:when test="${game.carte.getTuile(x, y) != null && game.carte.getTuile(x, y).soldat != null && game.carte.getTuile(x, y).soldat.proprietaire.id == joueur.id}">
                                         <div class="soldat-joueur">
                                             <img src="resources/icons/Large/soldier.png" alt="Soldat joueur">
                                         </div>
                                     </c:when>
-                                    <c:when test="${carte.getTuile(x, y) != null && carte.getTuile(x, y).soldat != null}">
+                                    <c:when test="${game.carte.getTuile(x, y) != null && game.carte.getTuile(x, y).soldat != null}">
                                         <div class="soldat-adversaire">
                                             <img src="resources/icons/Large/soldier.png" alt="Soldat adversaire">
                                         </div>
@@ -237,10 +264,10 @@
         <button type="button" onclick="submitDirection('moveSouth')">↓</button>
         <button type="button" onclick="submitDirection('moveEast')">→</button>
         <button type="button" onclick="submitDirection('moveWest')">←</button>
-        <button type="button" style="background: gainsboro" onclick="submitDirection('moveWest')">Recruit a soldier</button>
+        <button type="button" style="background: gainsboro" onclick="submitDirection('recruit')">Recruit a soldier</button>
         <button type="submit" name="action" value="heal">Heal</button>
         <button type="submit" name="action" value="forage">Forage</button>
-        <button type="submit" name="action" value="endTurn">End Turn</button>
+        <button type="submit" onclick="submitAction('endTurn')">End Turn</button>
     </form>
     <% } else { %>
     <p>En attente du tour des autres joueurs...</p>
@@ -266,6 +293,24 @@
         // Soumettre le formulaire
         document.getElementById('deplacementForm').submit();
     }
+
+    function submitAction(direction) {
+        const now = new Date().getTime();
+
+        // Empêche les soumissions répétées rapides
+        if (lastSubmitted && now - lastSubmitted < 500) {
+            console.warn("Double soumission évitée.");
+            return;
+        }
+
+        lastSubmitted = now;
+
+        // Définir la direction choisie dans le champ caché
+        document.getElementById('directionInput').value = direction;
+        // Soumettre le formulaire
+        document.getElementById('deplacementForm').setAttribute("action", "actions");
+        document.getElementById('deplacementForm').submit();
+    }
 </script>
 
 <script>
@@ -273,6 +318,7 @@
     // Connecter au WebSocket
     //const playerId = ${joueur.login}; // Id unique du joueur
     const socket = new WebSocket(`ws://192.168.1.167:8082/game_4x/gameUpdates/${joueur.login}`);
+    //const socket = new WebSocket(`ws://172.20.10.13:8082/game_4x/gameUpdates/${joueur.login}`);
 
     // Quand une connexion est ouverte
     socket.onopen = function () {
@@ -282,9 +328,11 @@
     // Quand un message est reçu
     socket.onmessage = function (event) {
         const message = event.data;
-        // Mettez à jour dynamiquement la page en fonction du message
-        if (message.includes("Le soldat a été déplacé")) {
-            location.reload(); // Exemple simple : recharger la page
+        if (message.includes("Ville capturée")) {
+            alert(message); // Affiche une alerte avec le message de capture
+            refreshPageWithMeta(1); // Rafraîchit la page après une seconde
+        } else if (message.includes("Le soldat a été déplacé") || message.includes("un ennemi en")) {
+            refreshPageWithMeta(1);
         }
         console.log("Message reçu : " + message);
     };
@@ -293,6 +341,21 @@
     socket.onclose = function () {
         console.log("Connexion WebSocket fermée.");
     };
+
+    function refreshPageWithMeta(interval) {
+        // Créer l'élément <meta> pour le rafraîchissement
+        const metaRefresh = document.createElement('meta');
+        metaRefresh.setAttribute('http-equiv', 'refresh');
+        metaRefresh.setAttribute('content', interval); // Intervalle en secondes
+
+        // Ajouter <meta> dans le <head>
+        document.head.appendChild(metaRefresh);
+
+        // Supprimer le <meta> après le rechargement de la page
+        setTimeout(() => {
+            document.head.removeChild(metaRefresh);
+        }, interval * 1000); // Convertir l'intervalle en millisecondes
+    }
 </script>
 </body>
 </html>

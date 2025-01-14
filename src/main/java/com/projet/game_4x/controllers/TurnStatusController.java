@@ -23,6 +23,7 @@ public class TurnStatusController extends HttpServlet {
         int currentPlayer = game.getCurrentPlayer();
 
         System.out.println("##### prochain joueur " + game.getCurrentPlayer());
+        System.out.println("***liste des joeueurs " + game.getJoueurs().toString());
         // Envoyer une réponse JSON
         response.setContentType("application/json");
         response.getWriter().write("{\"currentPlayer\": " + currentPlayer + "}");

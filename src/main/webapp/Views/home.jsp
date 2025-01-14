@@ -57,14 +57,16 @@
 <body>
 
 <h1>Bienvenue, ${joueur.login} !</h1>
-
+<% if (game != null && game.isStart()) { %>
 <form action="new_game" method="get">
-    <% if (game != null && game.isStart()) { %>
-        <button type="submit">Rejoindre le jeu</button>
-    <% } else { %>
-        <button type="submit">Commencer le jeu</button>
-    <% } %>
+    <button type="submit">Rejoindre le jeu</button>
 </form>
+    <% } else { %>
+<form action="game" method="get">
+    <button type="submit">Commencer le jeu</button>
+</form>
+    <% } %>
+
 
 </body>
 </html>

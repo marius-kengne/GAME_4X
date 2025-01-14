@@ -199,4 +199,68 @@ public class Carte {
                 throw new IllegalArgumentException("Direction invalide : " + direction);
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Carte ID: ").append(id).append("\n");
+        sb.append("Dimensions: ").append(largeur).append("x").append(hauteur).append("\n");
+        sb.append("Grille:\n");
+
+        for (int y = 0; y < hauteur; y++) {
+            for (int x = 0; x < largeur; x++) {
+                Tuile tuile = getTuile(x, y);
+                if (tuile != null) {
+                    switch (tuile.getType()) {
+                        case "montagne":
+                            sb.append("M ");
+                            break;
+                        case "foret":
+                            sb.append("F ");
+                            break;
+                        case "ville":
+                            sb.append("V ");
+                            break;
+                        case "vide":
+                        default:
+                            sb.append(". ");
+                            break;
+                    }
+                } else {
+                    sb.append("? ");
+                }
+            }
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
+    public static Carte chargerCarteExistante(int id) {
+        try (Connection connection = DBConnection.getConnection()) {
+            // Préparer la requête pour vérifier et charger une carte existante
+            String queryCheck = "SELECT id, largeur, hauteur FROM cartes WHERE id = ? LIMIT 1";
+            PreparedStatement stmtCheck = connection.prepareStatement(queryCheck);
+            stmtCheck.setInt(1, id); // Passer l'ID de la carte en paramètre
+            ResultSet rs = stmtCheck.executeQuery();
+
+            if (rs.next()) { // Vérifier si une carte correspond à l'ID
+                // Charger les informations de la carte
+                int carteId = rs.getInt("id");
+                int existingLargeur = rs.getInt("largeur");
+                int existingHauteur = rs.getInt("hauteur");
+
+                // Créer une instance de la carte et charger les tuiles/soldats
+                Carte carte = new Carte(carteId, existingLargeur, existingHauteur);
+                carte.chargerTuilesEtSoldatsDepuisBD(); // Charger les tuiles et soldats associés
+                System.out.println("Carte existante chargée depuis la base de données.");
+                return carte;
+            } else {
+                throw new RuntimeException("Aucune carte trouvée avec l'ID : " + id);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erreur lors du chargement de la carte avec l'ID : " + id, e);
+        }
+    }
 }

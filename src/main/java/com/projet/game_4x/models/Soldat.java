@@ -75,6 +75,7 @@ public class Soldat {
     public int attaquer(Soldat cible) {
         int degats = Math.max(this.pointsDAttaque - cible.getPointsDeDefense(), 0); // Dégâts effectifs
         cible.setPointsDeVie(cible.getPointsDeVie() - degats); // Réduire les points de vie de la cible
+        cible.setPointsDeDefense(cible.getPointsDeDefense() - degats);
         return degats;
     }
 }

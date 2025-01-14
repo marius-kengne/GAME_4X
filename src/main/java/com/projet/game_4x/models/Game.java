@@ -13,7 +13,7 @@ public class Game {
 
     private Game() {
         this.joueurs = new ArrayList<>();
-        this.currentPlayer = 1; // Le joueur 1 commence par défaut
+        //this.currentPlayer = 1; // Le joueur 1 commence par défaut
     }
 
     public static synchronized Game getInstance() {
@@ -49,9 +49,28 @@ public class Game {
         this.currentPlayer = currentPlayer;
     }
 
-    public synchronized void nextPlayer() {
+
+    public synchronized void nextPlayerOld() {
         int totalPlayers = joueurs.size();
         currentPlayer = (currentPlayer % totalPlayers) + 1;
+    }
+
+    public synchronized void nextPlayer() {
+        if (joueurs.isEmpty()) {
+            throw new IllegalStateException("La liste des joueurs est vide. Impossible de définir le prochain joueur.");
+        }
+
+        // Trouver l'index du joueur actuel dans la liste
+        int currentIndex = joueurs.indexOf(currentPlayer);
+
+        // Si le joueur actuel n'est pas trouvé (par exemple, première exécution), commencer par le premier joueur
+        if (currentIndex == -1) {
+            currentPlayer = joueurs.get(0); // Définir le premier joueur comme joueur actuel
+        } else {
+            // Calculer l'index du prochain joueur
+            int nextIndex = (currentIndex + 1) % joueurs.size();
+            currentPlayer = joueurs.get(nextIndex); // Obtenir l'ID du prochain joueur
+        }
     }
 
     public boolean isStart() {

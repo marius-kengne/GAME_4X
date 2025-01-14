@@ -1,65 +1,49 @@
 package com.projet.game_4x.controllers;
 
 import com.projet.game_4x.models.*;
+import com.projet.game_4x.utils.GameWebSocket;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
-import jakarta.servlet.annotation.*;
 import java.io.IOException;
-import java.util.List;
 
 @WebServlet(name = "ActionsController", value = "/actions")
 public class ActionsController extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Récupérer la carte et les joueurs depuis le contexte
-        Carte carte = (Carte) getServletContext().getAttribute("carte");
-        List<Joueur> joueurs = (List<Joueur>) getServletContext().getAttribute("joueurs");
-        int tourActuel = (int) getServletContext().getAttribute("tourActuel");
-
-        Joueur joueurActuel = joueurs.get(tourActuel);
 
         // Récupérer l'action depuis le formulaire
-        String action = request.getParameter("action");
+        String action = request.getParameter("direction");
         String message;
+
+        HttpSession session = request.getSession();
+        Object tourActuel = session.getAttribute("tourActuel");
+
 
         // Gérer les actions
         switch (action) {
-            case "moveNorth":
-                message = deplacerSoldat(request, joueurActuel, 0, -1, carte);
-                break;
-            case "moveSouth":
-                message = deplacerSoldat(request, joueurActuel, 0, 1, carte);
-                break;
-            case "moveEast":
-                message = deplacerSoldat(request, joueurActuel, 1, 0, carte);
-                break;
-            case "moveWest":
-                message = deplacerSoldat(request, joueurActuel, -1, 0, carte);
-                break;
-            case "heal":
-                message = soignerSoldat(request, joueurActuel);
-                break;
-            case "forage":
-                message = forager(request, joueurActuel);
-                break;
             case "endTurn":
                 // Passer au joueur suivant
-                tourActuel = (tourActuel + 1) % joueurs.size();
-                getServletContext().setAttribute("tourActuel", tourActuel);
-                message = "Tour passé au joueur suivant.";
+                Game game = Game.getInstance();
+                game.nextPlayer();
+                if (tourActuel == null){
+                    session.setAttribute("tourActuel", 0);
+                }else {
+                    int tour = (int) session.getAttribute("tourActuel");
+                    session.setAttribute("tourActuel", tour+1);
+                }
+                GameWebSocket.broadcast("Le soldat a été déplacé vers la position X=");
                 break;
             default:
                 message = "Action non reconnue !";
         }
 
-        // Stocker les messages et mettre à jour la vue
-        request.setAttribute("message", message);
-        request.setAttribute("carte", carte);
-        request.setAttribute("joueur", joueurs.get(tourActuel));
-        request.setAttribute("tourActuel", tourActuel);
-        request.getRequestDispatcher("/Views/game.jsp").forward(request, response);
+        response.sendRedirect("game");
     }
 
     private String deplacerSoldat(HttpServletRequest request, Joueur joueur, int dx, int dy, Carte carte) {
