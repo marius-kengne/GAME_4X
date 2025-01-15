@@ -3,7 +3,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>Inscription</title>
     <style>
         /* Style général pour centrer le contenu */
         body {
@@ -13,7 +13,6 @@
             min-height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
-            /*background-color: #28a745;*/
             background-image: url("${pageContext.request.contextPath}/resources/background.jpg");
             background-size: cover;
             background-repeat: no-repeat;
@@ -98,14 +97,13 @@
     </style>
 </head>
 <body>
-
 <div class="container">
-    <h1> Authentification </h1>
+    <h1> Inscription </h1>
 
     <!-- Affichage des messages -->
     <%
         String errorMessage = (String) request.getAttribute("erreur");
-        String successMessage = (String) session.getAttribute("success");
+        String successMessage = (String) request.getAttribute("success");
     %>
     <% if (errorMessage != null) { %>
     <p class="error-message"><%= errorMessage %></p>
@@ -114,20 +112,17 @@
     <p class="success-message"><%= successMessage %></p>
     <% } %>
 
-    <!-- Formulaire de connexion -->
-    <form action="login" method="POST">
-        <input type="hidden" name="action" value="login">
+    <!-- Formulaire d'inscription -->
+    <form action="register" method="POST">
         <label for="login">Login :</label>
         <input type="text" id="login" name="login" required>
 
         <label for="password">Mot de Passe :</label>
-        <input type="password" id="password" name="password" required>
+        <input type="password" id="motDePasse" name="password" required>
 
-        <button type="submit">Se connecter</button>
+        <button type="submit">Créer un compte</button>
     </form>
-
-    <!-- Lien pour basculer vers l'inscription -->
-    <a class="toggle-link" href="/game_4x/register">Créer un compte</a>
+    <a class="toggle-link" href="/game_4x/login">Déjà un compte ? Connectez-vous</a>
 </div>
 </body>
 </html>

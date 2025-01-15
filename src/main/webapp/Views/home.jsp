@@ -3,6 +3,12 @@
 <%
     // Récupérer les données de session
     Joueur joueur = (Joueur) session.getAttribute("joueur");
+    Game game = (Game) application.getAttribute("game");
+    /*
+    if (game == null) {
+        out.println("<h1>Erreur : le jeu n'a pas encore été initialisé !</h1>");
+        return;
+    }*/
 %>
 <!DOCTYPE html>
 <html>
@@ -11,7 +17,9 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f7f7f7;
+            background-image: url("${pageContext.request.contextPath}/resources/background.jpg");
+            background-size: cover;
+            background-repeat: no-repeat;
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -30,11 +38,11 @@
             align-items: center;
         }
         button {
+            background-color: #4CAF50;
             padding: 10px 15px;
             font-size: 14px;
             font-weight: bold;
             color: white;
-            background-color: #007bff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -50,11 +58,17 @@
 </head>
 <body>
 
-<h1>Bienvenue Sur notre GAME 4X</h1>
-
-<form action="login" method="get">
-    <button type="submit">S'authentifier</button>
+<h1>Bienvenue, ${joueur.login} !</h1>
+<% if (game != null && game.isStart()) { %>
+<form action="new_game" method="get">
+    <button type="submit">Rejoindre le jeu</button>
 </form>
+    <% } else { %>
+<form action="game" method="get">
+    <button type="submit">Commencer le jeu</button>
+</form>
+    <% } %>
+
 
 </body>
 </html>
