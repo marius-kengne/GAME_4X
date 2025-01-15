@@ -16,10 +16,9 @@ import java.io.IOException;
 public class StartGameController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        // Récupérer l'instance globale de jeu
+
         Game game = Game.getInstance();
 
-        // Charger ou générer une carte si nécessaire
         synchronized (game) {
             if (game.getCarte() == null) {
                 if (!game.isStart()) {
@@ -34,32 +33,26 @@ public class StartGameController extends HttpServlet {
 
         HttpSession session = request.getSession();
         Joueur joueur = (Joueur) session.getAttribute("joueur");
-        //Integer joueurId = (Integer) session.getAttribute("playerId");
+
         Integer joueurId = joueur.getId();
 
-        // Ajouter le joueur à la partie
+
         synchronized (game) {
             if (joueurId == null || !game.getJoueurs().contains(joueurId)) {
-                //joueurId = game.getJoueurs().size() + 1;
+
                 session.setAttribute("playerId", joueurId);
                 game.addJoueur(joueurId);
             }
 
-            // Initialiser le jeu si ce n'est pas encore fait
             if (!game.isStart()) {
                 game.setStart(true);
                 game.setCurrentPlayer(joueurId);
             }
         }
 
-        // Stocker le jeu dans le contexte
         session.setAttribute("game", game);
         getServletContext().setAttribute("game", game);
-        //getServletContext().setAttribute("tourActuel", game.getCurrentPlayer());
 
-
-        // Rediriger vers la vue
-        //request.getRequestDispatcher("Views/start.jsp").forward(request, response);
         response.sendRedirect("game");
     }
 }

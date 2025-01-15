@@ -30,7 +30,10 @@
         body {
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #f7f7f7;
+            /*background-color: #f7f7f7;*/
+            background-image: url("${pageContext.request.contextPath}/resources/background.jpg");
+            background-size: cover;
+            background-repeat: no-repeat;
             display: flex;
             flex-direction: column;
         }
@@ -71,7 +74,8 @@
         table {
             border-collapse: collapse;
             margin: auto;
-            background-color: #fff;
+            /*background-color: #fff;*/
+            background-color: #eae6df;
         }
         td {
             width: 50px;
@@ -114,6 +118,17 @@
         .chat-box {
             height: 300px;
             overflow-y: auto;
+        }
+        .chat-box {
+            height: 300px;
+            overflow-y: auto;
+            background-color: #eae6df; /* Couleur d'arrière-plan des chats WhatsApp */
+            background-image: url('https://web.whatsapp.com/img/bg-chat-tile-dark_b828cb49e3a4fd2f42987870e3b8f54c.png'); /* Optionnel : motif floral utilisé par WhatsApp */
+            background-repeat: repeat;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
         }
         .chat-input {
             display: flex;
@@ -287,9 +302,10 @@
 
     <!-- Right Panel: Chat and Notifications -->
     <div class="right-panel">
-
+        <hr>
         <h3>Notifications</h3>
-        <div id="notifications" class="notifications">
+        <hr>
+        <div id="notifications" class="notifications" style="height: 100px">
             <%
                 String flashSuccess = (String) session.getAttribute("flashSuccess");
                 String flashErreur = (String) session.getAttribute("flashErreur");

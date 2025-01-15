@@ -24,7 +24,7 @@ public class ActionsController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        // Récupérer l'action depuis le formulaire
+        /** Récupérer l'action depuis le formulaire**/
         String action = request.getParameter("direction");
         String message;
 
@@ -40,7 +40,7 @@ public class ActionsController extends HttpServlet {
             return;
         }
 
-        // Gérer les actions
+        /** Gérer les actions**/
         switch (action) {
             case "heal":
                 ajouterPointsDeProductionAuJoueur(joueur,15);
@@ -81,12 +81,12 @@ public class ActionsController extends HttpServlet {
                 request.getSession().setAttribute("flashSuccess", msg);
                 break;
             case "endGame":
-                //terminerPartie(request, response);
+                /**terminerPartie(request, response);**/
                 response.sendRedirect("endGame");
                 return;
             case "endTurn":
-                // Passer au joueur suivant
-                //Game game = Game.getInstance();
+                /** Passer au joueur suivant
+                Game game = Game.getInstance();**/
                 game.nextPlayer();
                 joueur = Joueur.getJoueurById(joueur.getId());
                 try {
@@ -116,7 +116,7 @@ public class ActionsController extends HttpServlet {
                     return;
                 }
 
-                // Trouver une tuile vide sans propriétaire pour placer le soldat
+                /** Trouver une tuile vide sans propriétaire pour placer le soldat**/
                 Tuile tuileVide = null;
                 try {
                     tuileVide = trouverTuileVideSansProprietaire(DBConnection.getConnection(), carte.getId());
@@ -259,7 +259,7 @@ public class ActionsController extends HttpServlet {
         }
     }
 
-    // Trouver une tuile vide sans propriétaire pour placer le soldat
+
     private Tuile trouverTuileVideSansProprietaire(Connection connection, int carteId) throws SQLException {
         String query = """
         SELECT t.id, t.type, t.x, t.y, t.points_de_defense, t.proprietaire_id
@@ -298,22 +298,22 @@ public class ActionsController extends HttpServlet {
             return;
         }
 
-        // Obtenez les IDs des joueurs
+
         List<Integer> joueurIds = game.getJoueurs();
 
-        // Mappez les IDs vers les objets Joueur
+
         List<Joueur> joueurs = joueurIds.stream()
                 .map(id -> Joueur.getJoueurById(id)) // Utilise correctement `getJoueurById`
                 .collect(Collectors.toList());
 
-        // Trier les joueurs par score décroissant
+
         joueurs.sort(Comparator.comparingInt(Joueur::getScore).reversed());
 
-        // Identifiez le gagnant et les perdants
+
         Joueur gagnant = joueurs.get(0);
         List<Joueur> perdants = joueurs.subList(1, joueurs.size());
 
-        // Définir les attributs de session pour chaque joueur
+
         for (Integer joueurId : joueurIds) {
             Joueur joueur = Joueur.getJoueurById(joueurId);
             HttpSession session = request.getSession(false); // Récupérer la session existante pour ce joueur
@@ -326,8 +326,7 @@ public class ActionsController extends HttpServlet {
             }
         }
 
-        // Redirigez tous les utilisateurs vers la page de score
-        //response.sendRedirect("endGame");
+
         request.getRequestDispatcher("Views/endGame.jsp").forward(request, response);
     }
 

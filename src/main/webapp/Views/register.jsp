@@ -13,7 +13,9 @@
             min-height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
-            background-color: #f7f7f7;
+            background-image: url("${pageContext.request.contextPath}/resources/background.jpg");
+            background-size: cover;
+            background-repeat: no-repeat;
         }
 
         .container {

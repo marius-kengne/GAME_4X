@@ -13,6 +13,6 @@ public class EndGameServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Game game = Game.getInstance();
-        game.endGame(request, response); // Appelle la méthode pour terminer la partie
+        game.endGame(request, response);
     }
 }

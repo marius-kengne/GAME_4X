@@ -13,13 +13,9 @@ import java.io.IOException;
 public class TurnStatusController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, IOException {
-        // Récupérer l'instance du jeu global
+
         Game game = Game.getInstance();
-        //Game game = (Game) getServletContext().getAttribute("game");
 
-        //game.nextPlayer();
-
-        // Récupérer l'ID du joueur actuel
         int currentPlayer = game.getCurrentPlayer();
 
         System.out.println("##### prochain joueur " + game.getCurrentPlayer());

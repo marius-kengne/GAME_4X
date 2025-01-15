@@ -8,7 +8,9 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f7f7f7;
+      background-image: url("${pageContext.request.contextPath}/resources/background.jpg");
+      background-size: cover;
+      background-repeat: no-repeat;
       text-align: center;
     }
     .message-container {

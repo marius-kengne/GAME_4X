@@ -17,7 +17,9 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #28a745;
+            background-image: url("${pageContext.request.contextPath}/resources/background.jpg");
+            background-size: cover;
+            background-repeat: no-repeat;
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -36,11 +38,11 @@
             align-items: center;
         }
         button {
+            background-color: #4CAF50;
             padding: 10px 15px;
             font-size: 14px;
             font-weight: bold;
             color: white;
-            background-color: #007bff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
