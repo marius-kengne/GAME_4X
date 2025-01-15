@@ -96,7 +96,7 @@ public class Carte {
         stmtTuile.executeBatch();
     }
 
-    private void chargerTuilesEtSoldatsDepuisBD() {
+    public void chargerTuilesEtSoldatsDepuisBD() {
         try (Connection connection = DBConnection.getConnection()) {
             // Charger les tuiles
             String queryTuiles = "SELECT * FROM tuiles WHERE carte_id = ?";

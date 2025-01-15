@@ -61,29 +61,23 @@ public class DeplacementController extends HttpServlet {
         }
 
         Tuile currentPosition = soldat.getPosition();
-        //Tuile destination = null;
-
-        // Calculer la destination
         Tuile destination = calculateDestination(action, carte, currentPosition);
 
         // Validation et logique de déplacement
         if (destination == null) {
             String erreur = "Déplacement impossible. La destination est hors de la carte.";
             request.setAttribute("erreur", erreur);
-            //GameWebSocket.sendToClient(joueur.getLogin(), erreur);
             GameWebSocket.broadcast("Le soldat a été déplacé vers la position X=");
             request.getSession().setAttribute("flashErreur", "Déplacement impossible. La destination est hors de la carte.");
         } else if ("montagne".equals(destination.getType())) {
             String erreur = "Déplacement bloqué : La tuile est une montagne.";
             request.setAttribute("erreur", erreur);
-            //GameWebSocket.sendToClient(joueur.getLogin(), erreur);
+
             GameWebSocket.broadcast("Le soldat a été déplacé vers la position X=");
             request.getSession().setAttribute("flashErreur", "Déplacement bloqué : La tuile est une montagne.");
         } else if ("ville".equals(destination.getType()) && destination.getProprietaire() == null) {
             //gestion des villes
-            System.out.println("************** gestion ville");
-            //int degats = Math.max(soldat.getPointsDAttaque() - destination.getPointsDeDefense(), 0); // Le soldat attaque avec des points aléatoires
-            Random random = new Random();
+             Random random = new Random();
             int minDegats = Math.min(soldat.getPointsDAttaque(), destination.getPointsDeDefense());
             int maxDegats = Math.max(soldat.getPointsDAttaque(), destination.getPointsDeDefense());
             int degats = random.nextInt(maxDegats - minDegats + 1) + minDegats;
@@ -115,8 +109,7 @@ public class DeplacementController extends HttpServlet {
                 request.getSession().setAttribute("flashSuccess", "Ville capturée !");
                 GameWebSocket.broadcast("La ville en X=" + destination.getX() + ", Y=" + destination.getY() + " a été capturée par le joueur " + joueur.getLogin());
             } else {
-                System.out.println("************** ID Ville : " + destination.getId());
-                System.out.println("************** Ville non capturée");
+
                 // Ville non capturée
                 try (Connection connection = DBConnection.getConnection()) {
                     connection.setAutoCommit(false);
@@ -130,26 +123,11 @@ public class DeplacementController extends HttpServlet {
                 }
 
                 GameWebSocket.broadcast("Le soldat " + soldat.getId() + " a éliminé un ennemi en X=" + destination.getX() + ", Y=" + destination.getY());
-                //request.setAttribute("erreur", "Ville attaquée mais pas encore capturée !");
                 request.getSession().setAttribute("flashErreur", "Ville attaquée mais pas encore capturée !");
             }
 
         } else if (destination.getSoldat() != null && destination.getSoldat().getProprietaire().getId() != joueur.getId()) {
-            /*
-            Soldat ennemi = destination.getSoldat();
-            int degats = soldat.attaquer(ennemi);
-            if (ennemi.getPointsDeVie() <= 0) {
-                destination.setSoldat(null);
-                soldat.setPosition(destination);
-                destination.setSoldat(soldat);
-                updateSoldatPosition(soldat, destination);
-                GameWebSocket.broadcast("Le soldat a été déplacé vers la position X=");
-                request.setAttribute("message", "Soldat ennemi neutralisé.");
-            } else {
-                GameWebSocket.broadcast("Le soldat a été déplacé vers la position X=");
-                request.setAttribute("erreur", "Combat en cours, l'ennemi a survécu.");
-            }
-             */
+
             Soldat ennemi = destination.getSoldat();
             int degats = soldat.attaquer(ennemi); // Le soldat attaque avec des points aléatoires
             System.out.println("********** start combat");
@@ -201,12 +179,10 @@ public class DeplacementController extends HttpServlet {
         } else {
             // Déplacement vers une tuile vide
             try (Connection connection = DBConnection.getConnection()) {
-                connection.setAutoCommit(false); // Activer une transaction pour garantir la cohérence
+                connection.setAutoCommit(false);
 
-                // Mettre à jour la tuile actuelle comme vide dans la BD
                 updateTuileToVide(connection, currentPosition);
 
-                // Mettre à jour le soldat pour qu'il occupe la nouvelle tuile dans la BD
                 updateSoldatPosition(connection, soldat, destination);
 
                 // Mettre à jour la carte dans les objets en mémoire
@@ -242,22 +218,6 @@ public class DeplacementController extends HttpServlet {
             }
         }
 
-        /*
-        if (destination != null){
-            final Tuile dest = destination;
-            // Mettez à jour les tuiles et soldats sur la carte
-            carte.getTuiles().forEach(tuile -> {
-                if (tuile.getId() == currentPosition.getId()) {
-                    tuile.setSoldat(null);
-                    tuile.setType("vide");
-                } else if (tuile.getId() == dest.getId()) {
-                    tuile.setSoldat(soldat);
-                }
-            });
-            // Remettre la carte mise à jour dans le contexte
-            getServletContext().setAttribute("carte", carte);
-        }*/
-        //game.nextPlayer();
         joueur = Joueur.getJoueurById(joueur.getId());
         try {
             joueur = Joueur.chargerSoldatJoueur(joueur);
@@ -272,11 +232,7 @@ public class DeplacementController extends HttpServlet {
             int tour = (int) session.getAttribute("tourActuel");
             session.setAttribute("tourActuel", tour+1);
         }
-        //request.setAttribute("carte", carte);
-        //request.setAttribute("tourActuel", getServletContext().getAttribute("tourActuel"));
-        //request.getRequestDispatcher("Views/game.jsp").forward(request, response);
-        //response.sendRedirect("home");
-        //request.getRequestDispatcher("Views/start.jsp").forward(request, response);
+
         response.sendRedirect("game");
     }
 
@@ -316,7 +272,7 @@ public class DeplacementController extends HttpServlet {
         }
     }
 
-    //pour l'attaque de soldat
+    /**pour l'attaque de soldat*/
     private void updateSoldatPosition(Soldat soldat, Tuile nouvellePosition) {
         if (nouvellePosition == null) {
             throw new IllegalArgumentException("Un soldat doit toujours avoir une position valide.");

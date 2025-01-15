@@ -15,6 +15,7 @@ public class GameInitializationListener implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
+        // Nettoyage des ressources si nécessaire
         System.out.println("Application arrêtée. Nettoyage des ressources...");
         GameWebSocket.clearChat();
     }

@@ -1,6 +1,10 @@
 # GAME_4X
 Jeu multijoueur 4X. Les joueurs accèderont à la même instance de jeu et utiliseront le jeu au tour par tour pour accéder à la carte du jeu.
 
-![Alt text](src/main/webapp/resources/login.png "Game")
+![Alt text](src/main/webapp/resources/login.jpg "Game")
 
-![Alt text](src/main/webapp/resources/img.png "Game")
+![Alt text](src/main/webapp/resources/img.jpg "Game")
+
+![Alt text](src/main/webapp/resources/score.png "Game")
+
+![Alt text](src/main/webapp/resources/partie.png "Game")

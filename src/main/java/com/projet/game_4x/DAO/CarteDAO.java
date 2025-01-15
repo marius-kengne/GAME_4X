@@ -1,7 +1,6 @@
 package com.projet.game_4x.DAO;
 
-import com.projet.game_4x.models.Joueur;
-import com.projet.game_4x.models.Soldat;
+import com.projet.game_4x.models.Carte;
 import com.projet.game_4x.models.Tuile;
 import com.projet.game_4x.utils.DBConnection;
 
@@ -18,66 +17,32 @@ public class CarteDAO {
     private int id;
     private List<Tuile> tuiles;
 
-
-    private void chargerTuilesEtSoldatsDepuisBDOld() {
+    public static Carte chargerCarteExistante(int id) {
         try (Connection connection = DBConnection.getConnection()) {
-            // Charger les tuiles
-            String queryTuiles = "SELECT * FROM tuiles WHERE carte_id = ?";
-            PreparedStatement stmtTuiles = connection.prepareStatement(queryTuiles);
-            stmtTuiles.setInt(1, this.id);
-            ResultSet rsTuiles = stmtTuiles.executeQuery();
-            Tuile tuile = null;
-            while (rsTuiles.next()) {
-                tuile = new Tuile(
-                        rsTuiles.getInt("id"),
-                        rsTuiles.getString("type"),
-                        rsTuiles.getInt("x"),
-                        rsTuiles.getInt("y"),
-                        null,
-                        rsTuiles.getInt("points_de_defense")
-                );
-                this.tuiles.add(tuile);
+            // Préparer la requête pour vérifier et charger une carte existante
+            String queryCheck = "SELECT id, largeur, hauteur FROM cartes WHERE id = ? LIMIT 1";
+            PreparedStatement stmtCheck = connection.prepareStatement(queryCheck);
+            stmtCheck.setInt(1, id); // Passer l'ID de la carte en paramètre
+            ResultSet rs = stmtCheck.executeQuery();
+
+            if (rs.next()) { // Vérifier si une carte correspond à l'ID
+                // Charger les informations de la carte
+                int carteId = rs.getInt("id");
+                int existingLargeur = rs.getInt("largeur");
+                int existingHauteur = rs.getInt("hauteur");
+
+                // Créer une instance de la carte et charger les tuiles/soldats
+                Carte carte = new Carte(carteId, existingLargeur, existingHauteur);
+                carte.chargerTuilesEtSoldatsDepuisBD(); // Charger les tuiles et soldats associés
+                System.out.println("Carte existante chargée depuis la base de données.");
+                return carte;
+            } else {
+                throw new RuntimeException("Aucune carte trouvée avec l'ID : " + id);
             }
 
-            // Charger les soldats et les assigner aux tuiles
-            String querySoldats = """
-                SELECT s.id AS soldat_id, s.proprietaire_id, t.id AS tuile_id, t.x, t.y, j.login,
-                       s.points_de_vie, s.points_d_attaque, s.points_de_defense
-                FROM soldats s
-                JOIN tuiles t ON s.position_tuile_id = t.id
-                JOIN joueurs j ON s.proprietaire_id = j.id
-                WHERE t.carte_id = ?
-            """;
-            PreparedStatement stmtSoldats = connection.prepareStatement(querySoldats);
-            stmtSoldats.setInt(1, this.id);
-            ResultSet rsSoldats = stmtSoldats.executeQuery();
-
-            while (rsSoldats.next()) {
-                //tuile = Tuile.getTuile(rsSoldats.getInt("x"), rsSoldats.getInt("y"));
-                if (tuile != null) {
-                    Joueur proprietaire = new Joueur(
-                            rsSoldats.getInt("proprietaire_id"),
-                            rsSoldats.getString("login"),
-                            "",
-                            0,
-                            0
-                    );
-
-                    Soldat soldat = new Soldat(
-                            rsSoldats.getInt("soldat_id"),
-                            proprietaire,
-                            tuile,
-                            rsSoldats.getInt("points_de_vie"),
-                            rsSoldats.getInt("points_d_attaque"),
-                            rsSoldats.getInt("points_de_defense")
-                    );
-
-                    tuile.setSoldat(soldat);
-                }
-            }
         } catch (SQLException e) {
             e.printStackTrace();
-            throw new RuntimeException("Erreur lors du chargement des tuiles et des soldats pour la carte.");
+            throw new RuntimeException("Erreur lors du chargement de la carte avec l'ID : " + id, e);
         }
     }
 }
