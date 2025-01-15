@@ -1,10 +1,14 @@
 package com.projet.game_4x.controllers;
 
+import com.projet.game_4x.models.Carte;
+import com.projet.game_4x.models.Game;
 import com.projet.game_4x.utils.DBConnection;
-
-import jakarta.servlet.*;
-import jakarta.servlet.annotation.*;
-import jakarta.servlet.http.*;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.sql.*;
@@ -60,11 +64,13 @@ public class RegisterController extends HttpServlet {
             int joueurId = generatedKeys.getInt(1);
 
             // Récupération de l'ID de la carte
-            Object carteIdObj = getServletContext().getAttribute("carteId");
+            //Object carteIdObj = getServletContext().getAttribute("carteId");
+            Game game = Game.getInstance();
+            Carte carteIdObj = game.getCarte();
             if (carteIdObj == null) {
                 return "La carte n'a pas été initialisée.";
             }
-            int carteId = (int) carteIdObj;
+            int carteId = (int) carteIdObj.getId();
 
             // Trouver une tuile vide sur la carte
             String findTuileQuery = "SELECT id FROM tuiles WHERE carte_id = ? AND type = 'vide' AND proprietaire_id IS NULL LIMIT 1";

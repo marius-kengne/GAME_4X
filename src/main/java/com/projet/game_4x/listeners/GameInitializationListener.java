@@ -1,5 +1,6 @@
 package com.projet.game_4x.listeners;
 
+import com.projet.game_4x.utils.GameWebSocket;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
@@ -29,5 +30,6 @@ public class GameInitializationListener implements ServletContextListener {
     public void contextDestroyed(ServletContextEvent sce) {
         // Nettoyage des ressources si nécessaire
         System.out.println("Application arrêtée. Nettoyage des ressources...");
+        GameWebSocket.clearChat();
     }
 }

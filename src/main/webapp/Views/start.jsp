@@ -20,20 +20,57 @@
 <html>
 <head>
     <title>4X Game - Plateau</title>
-    <!--meta http-equiv="refresh" content="2"-->
     <style>
+        .soldat-joueur {
+            background-color: green;
+        }
+        .soldat-adversaire {
+            background-color: red;
+        }
         body {
+            margin: 0;
             font-family: Arial, sans-serif;
             background-color: #f7f7f7;
-            margin: 0;
             display: flex;
             flex-direction: column;
+        }
+        .navbar {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
+            /*background-color: #007bff;*/
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+        }
+        .navbar h1 {
+            margin: 0;
+        }
+        .navbar .user-info {
+            font-size: 14px;
+        }
+        .container {
+            display: flex;
+            height: calc(100vh - 50px);
+        }
+        .left-panel, .right-panel {
+            width: 20%;
+            padding: 20px;
+            background-color: #e9ecef;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
         }
         table {
             border-collapse: collapse;
-            margin: 20px auto;
+            margin: auto;
             background-color: #fff;
         }
         td {
@@ -47,11 +84,15 @@
             height: 40px;
         }
         button {
-            padding: 10px 15px;
+            display: block;
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
             font-size: 14px;
             font-weight: bold;
             color: white;
-            background-color: #007bff;
+            /*background-color: #007bff;*/
+            background-color: #28a745;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -63,216 +104,323 @@
         button:active {
             background-color: #003f7f;
         }
-        .popup {
-            min-width: 450px;
-            min-height: 150px;
-            display: none;
-            position: fixed;
-            top: 28%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
+        .chat-box, .notifications {
             border: 1px solid #ccc;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            z-index: 1000;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #fff;
         }
-        .popup-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 999;
+        .chat-box {
+            height: 300px;
+            overflow-y: auto;
         }
-        .close-btn {
-            padding: 5px 10px;
-            background-color: red;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        #actions {
+        .chat-input {
+            display: flex;
             margin-top: 10px;
         }
-
-        .soldat-joueur {
-            background-color: green;
+        .chat-input input {
+            flex: 1;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
         }
-        .soldat-adversaire {
-            background-color: red;
+        .chat-input button {
+            flex-shrink: 0;
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        .direction-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
         }
     </style>
-    <script>
-        function showPopup() {
-            document.getElementById("popup").style.display = "block";
-            document.getElementById("popup-overlay").style.display = "block";
-        }
-        function closePopup() {
-            document.getElementById("popup").style.display = "none";
-            document.getElementById("popup-overlay").style.display = "none";
-        }
-    </script>
-    <script>
-        function checkTurn() {
-            fetch('/game_4x/turnStatus')
-                .then(response => response.json())
-                .then(data => {
-                    console.log("### start set status #######");
-                    const currentPlayer = data.currentPlayer;
-                    if (currentPlayer === <%= playerId %>) {
-                        console.log("### status set #######");
-                        //location.reload();
-                        document.getElementById('turn-info').innerText = "C'est votre tour !";
-                        document.getElementById('actions').style.display = "block";
-                    } else {
-                        console.log("### status not set #######");
-                        document.getElementById('turn-info').innerText = "En attente...";
-                        document.getElementById('actions').style.display = "none";
-                    }
-                });
-        }
-        setInterval(checkTurn, 2000); // Vérification toutes les 2 secondes
-    </script>
 </head>
 <body>
 
-<h1>Bienvenue, ${joueur.login} !</h1>
-<button onclick="showPopup()">Voir les informations du tour</button>
-
-<!-- Pop-up -->
-<div id="popup-overlay" class="popup-overlay" onclick="closePopup()"></div>
-<div id="popup" class="popup">
-    <h3>Tour actuel : ${tourActuel}</h3>
-    <h3>Points de production : ${joueur.pointsProduction}</h3>
-    <button class="close-btn" onclick="closePopup()">Fermer</button>
+<!-- Navbar -->
+<div class="navbar">
+    <h1>4X Game</h1>
+    <div class="user-info">
+        Bienvenue, ${joueur.login} |
+        <a href="logout" style="color: white; text-decoration: underline;">Déconnexion</a>
+    </div>
 </div>
 
-<!-- Affichage des messages -->
-<%
-    String erreur = (String) session.getAttribute("erreur");
-    String message = (String) session.getAttribute("message");
+<!-- Main Container -->
+<div class="container">
+    <!-- Left Panel: Actions -->
+    <div class="left-panel">
+        <button onclick="showPopup()">Informations de partie</button>
+        <h3>Tour actuel : ${tourActuel}</h3>
+        <h3>Points de production : ${joueur.pointsProduction}</h3>
+        <br><hr>
+        <form id="score" action="score" method="get" style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+            <button type="submit">Voir Score</button>
+        </form>
+        <hr>
+        <h3>Actions</h3>
+        <form id="actionsForm" action="actions" method="post">
+            <input type="hidden" name="direction" id="directionInput1">
+            <button type="submit" name="action" value="recruit">Recruter un soldat</button>
+            <button type="submit" onclick="submitAction('heal')">Soigner</button>
+            <button type="submit" onclick="submitAction('forage')">Chercher des ressources</button>
+            <button type="submit" onclick="submitAction('endTurn')">End Turn</button>
+            <button type="submit" onclick="submitAction('endGame')">End Game</button>
+        </form>
+    </div>
 
-    // Supprimez les messages après les avoir affichés
-    session.removeAttribute("erreur");
-    session.removeAttribute("message");
-%>
+    <!-- Main Content: Game Board -->
+    <div class="main-content">
+        <%
+            Integer id = game.getCurrentPlayer(); // Récupérer l'ID du joueur actuel
+            Joueur currentPlayer = null;
 
-<!-- Message de Notification du tour du Joueur de Jouer -->
-<h2 id="turn-info">Chargement...</h2>
+            if (id != null) {
+                try {
+                    currentPlayer = Joueur.getJoueurById(id); // Obtenir le joueur actuel
+                } catch (Exception e) {
 
-<% if (erreur != null) { %>
-<div class="error-message" style="color: red;"><%= erreur %></div>
-<% } %>
-
-<% if (message != null) { %>
-<div class="success-message" style="color: green;">
-    <% if (message.contains("Ville capturée")) { %>
-    <strong>Succès :</strong> <%= message %>
-    <% } else { %>
-    <%= message %>
-    <% } %>
-</div>
-<% } %>
-<!-- Grille de la carte -->
-<div id="game-board">
-    <table>
-        <c:forEach var="y" begin="0" end="${game.carte.hauteur - 1}">
-            <tr>
-                <c:forEach var="x" begin="0" end="${game.carte.largeur - 1}">
-                    <%
-                        int currentX = Integer.parseInt(String.valueOf(pageContext.getAttribute("x")));
-                        int currentY = Integer.parseInt(String.valueOf(pageContext.getAttribute("y")));
-                    %>
-                    <td>
-                        <c:choose>
-                            <c:when test="${game.carte.getTuile(x, y) != null && game.carte.getTuile(x, y).type == 'montagne'}">
-                                <img src="resources/icons/Large/mountain.png" alt="Montagne">
-                            </c:when>
-                            <c:when test="${game.carte.getTuile(x, y) != null && game.carte.getTuile(x, y).type == 'foret'}">
-                                <img src="resources/icons/Large/forest.png" alt="Forêt">
-                            </c:when>
-                            <c:when test="${game.carte.getTuile(x, y) != null && game.carte.getTuile(x, y).type == 'ville'}">
-                                <!--img src="resources/icons/Large/city.png" alt="Ville"-->
-                                <c:choose>
-                                    <c:when test="${game.carte.getTuile(x, y).proprietaire != null && game.carte.getTuile(x, y).proprietaire.id == joueur.id}">
-                                        <!-- Ville capturée par le joueur -->
-                                        <div style="background-color: lightgreen; padding: 5px;">
-                                            <img src="resources/icons/Large/city.png" alt="Ville capturée">
-                                            <p style="font-size: small;">Capturée</p>
-                                        </div>
-                                    </c:when>
-                                    <c:when test="${game.carte.getTuile(x, y).proprietaire != null}">
-                                        <!-- Ville capturée par un autre joueur -->
-                                        <div style="background-color: lightcoral; padding: 5px;">
-                                            <img src="resources/icons/Large/city.png" alt="Ville ennemie">
-                                            <p style="font-size: small;">Par <%= game.getCarte().getTuile(currentX, currentY).getProprietaire().getLogin() %></p>
-                                        </div>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <!-- Ville non capturée -->
-                                        <img src="resources/icons/Large/city.png" alt="Ville neutre">
-                                    </c:otherwise>
-                                </c:choose>
-                            </c:when>
-                            <c:otherwise>
-                                <c:choose>
-                                    <c:when test="${game.carte.getTuile(x, y) != null && game.carte.getTuile(x, y).soldat != null && game.carte.getTuile(x, y).soldat.proprietaire.id == joueur.id}">
-                                        <div class="soldat-joueur">
-                                            <img src="resources/icons/Large/soldier.png" alt="Soldat joueur">
-                                        </div>
-                                    </c:when>
-                                    <c:when test="${game.carte.getTuile(x, y) != null && game.carte.getTuile(x, y).soldat != null}">
-                                        <div class="soldat-adversaire">
-                                            <img src="resources/icons/Large/soldier.png" alt="Soldat adversaire">
-                                        </div>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <div style="height: 40px;"></div>
-                                    </c:otherwise>
-                                </c:choose>
-                            </c:otherwise>
-                        </c:choose>
-                    </td>
-                </c:forEach>
-            </tr>
-        </c:forEach>
-    </table>
-</div>
-
-<!-- Actions disponibles -->
-
-<div id="actions">
-    <% if (game.getCurrentPlayer() == joueur.getId()) { %>
-    <form id="deplacementForm" action="deplacerSoldat" method="post" style="display: flex; gap: 10px; justify-content: center; align-items: center;">
-        <label for="soldat">Choisir un soldat :</label>
-        <select name="soldatId" id="soldat" required>
-            <c:forEach var="soldat" items="${joueur.soldats}">
-                <option value="${soldat.id}">
-                    Soldat (${soldat.position.x}, ${soldat.position.y})
-                </option>
+                    out.println("<p style='color: red;'>Erreur : joueur introuvable.</p>");
+                }
+            }
+        %>
+        <% if (currentPlayer != null) { %>
+        <h2 id="turn-info" style="color: red">C'est au tour de <strong style="font-weight: bold"><%= currentPlayer.getLogin()%></strong> de jouer</h2>
+        <% } else { %>
+        <p>En attente du tour des autres joueurs...</p>
+        <% } %>
+        <table>
+            <c:forEach var="y" begin="0" end="${game.getCarte().hauteur - 1}">
+                <tr>
+                    <c:forEach var="x" begin="0" end="${game.getCarte().largeur - 1}">
+                        <%
+                            int currentX = Integer.parseInt(String.valueOf(pageContext.getAttribute("x")));
+                            int currentY = Integer.parseInt(String.valueOf(pageContext.getAttribute("y")));
+                        %>
+                        <td>
+                            <c:choose>
+                                <c:when test="${game.getCarte().getTuile(x, y) != null && game.getCarte().getTuile(x, y).type == 'montagne'}">
+                                    <img src="resources/icons/Large/mountain.png" alt="Montagne">
+                                </c:when>
+                                <c:when test="${game.getCarte().getTuile(x, y) != null && game.getCarte().getTuile(x, y).type == 'foret'}">
+                                    <img src="resources/icons/Large/forest.png" alt="Forêt">
+                                </c:when>
+                                <c:when test="${game.getCarte().getTuile(x, y) != null && game.getCarte().getTuile(x, y).type == 'ville'}">
+                                    <!--img src="resources/icons/Large/city.png" alt="Ville"-->
+                                    <c:choose>
+                                        <c:when test="${game.getCarte().getTuile(x, y).getProprietaire() != null && game.getCarte().getTuile(x, y).getProprietaire().getId() == joueur.id}">
+                                            <!-- Ville capturée par le joueur -->
+                                            <div style="background-color: lightgreen; padding: 5px;">
+                                                <img src="resources/icons/Large/city.png" alt="Ville capturée">
+                                                <p style="font-size: small;">Capturée</p>
+                                            </div>
+                                        </c:when>
+                                        <c:when test="${game.getCarte().getTuile(x, y).getProprietaire() != null}">
+                                            <!-- Ville capturée par un autre joueur -->
+                                            <div style="background-color: lightcoral; padding: 5px;">
+                                                <img src="resources/icons/Large/city.png" alt="Ville ennemie">
+                                                <p style="font-size: small;">Par <%= game.getCarte().getTuile(currentX, currentY).getProprietaire().getLogin() %></p>
+                                            </div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <!-- Ville non capturée -->
+                                            <img src="resources/icons/Large/city.png" alt="Ville neutre">
+                                        </c:otherwise>
+                                    </c:choose>
+                                </c:when>
+                                <c:otherwise>
+                                    <c:choose>
+                                        <c:when test="${game.getCarte().getTuile(x, y) != null && game.getCarte().getTuile(x, y).soldat != null && game.getCarte().getTuile(x, y).soldat.proprietaire.id == joueur.id}">
+                                            <div class="soldat-joueur">
+                                                <img src="resources/icons/Large/soldier.png" alt="Soldat joueur">
+                                            </div>
+                                        </c:when>
+                                        <c:when test="${game.getCarte().getTuile(x, y) != null && game.getCarte().getTuile(x, y).soldat != null}">
+                                            <div class="soldat-adversaire">
+                                                <img src="resources/icons/Large/soldier.png" alt="Soldat adversaire">
+                                            </div>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <div style="height: 40px;"></div>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </c:otherwise>
+                            </c:choose>
+                        </td>
+                    </c:forEach>
+                </tr>
             </c:forEach>
-        </select>
+        </table>
+        <div id="actions" class="direction-buttons">
+            <% if (game.getCurrentPlayer() == joueur.getId()) { %>
+            <form id="deplacementForm" action="deplacerSoldat" method="post" style="display: flex; gap: 10px; justify-content: center; align-items: center;">
+                <label for="soldat">Soldats </label>
+                <select name="soldatId" id="soldat" required>
+                    <c:forEach var="soldat" items="${joueur.soldats}">
+                        <option value="${soldat.id}">
+                            Soldat (${soldat.position.x}, ${soldat.position.y})
+                        </option>
+                    </c:forEach>
+                </select>
 
-        <!-- Champ caché pour stocker la direction -->
-        <input type="hidden" name="direction" id="directionInput">
+                <!-- Champ caché pour stocker la direction -->
+                <input type="hidden" name="direction" id="directionInput">
 
-        <!-- Boutons pour les directions -->
-        <button type="button" onclick="submitDirection('moveNorth')">↑</button>
-        <button type="button" onclick="submitDirection('moveSouth')">↓</button>
-        <button type="button" onclick="submitDirection('moveEast')">→</button>
-        <button type="button" onclick="submitDirection('moveWest')">←</button>
-        <button type="button" style="background: gainsboro" onclick="submitDirection('recruit')">Recruit a soldier</button>
-        <button type="submit" name="action" value="heal">Heal</button>
-        <button type="submit" name="action" value="forage">Forage</button>
-        <button type="submit" onclick="submitAction('endTurn')">End Turn</button>
-    </form>
-    <% } else { %>
-    <p>En attente du tour des autres joueurs...</p>
-    <% } %>
+                <!-- Boutons pour les directions -->
+                <button onclick="submitDirection('moveNorth')">↑</button>
+                <button onclick="submitDirection('moveSouth')">↓</button>
+                <button onclick="submitDirection('moveEast')">→</button>
+                <button onclick="submitDirection('moveWest')">←</button>
+                <button style="background: gainsboro" onclick="submitAction('recruit')">Recruit</button>
+                <!--button type="submit" name="action" value="heal">Heal</button>
+                <button type="submit" name="action" value="forage">Forage</button-->
+
+            </form>
+            <% } else { %>
+            <p>En attente du tour des autres joueurs...</p>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Right Panel: Chat and Notifications -->
+    <div class="right-panel">
+
+        <h3>Notifications</h3>
+        <div id="notifications" class="notifications">
+            <%
+                String flashSuccess = (String) session.getAttribute("flashSuccess");
+                String flashErreur = (String) session.getAttribute("flashErreur");
+                session.removeAttribute("flashSuccess");
+                session.removeAttribute("flashErreur");
+            %>
+            <% if (flashSuccess != null) { %>
+            <div class="success-message" style="color: green;">
+                <%= flashSuccess %>
+            </div>
+            <% } %>
+            <% if (flashErreur != null) { %>
+            <div class="error-message" style="color: red;">
+                <%= flashErreur %>
+            </div>
+            <% } %>
+        </div>
+        <br><hr>
+        <h3>Chat</h3>
+        <div class="chat-box" id="chatBox"></div>
+        <div class="chat-input">
+            <input type="text" id="chatInput" style="width: 200px" placeholder="Tapez votre message...">
+            <button style="width: 100px" onclick="sendMessage()">send</button>
+        </div>
+
+    </div>
 </div>
+
+
+<script>
+    const notificationContainer = document.querySelector('.notifications');
+
+    // Fonction pour afficher une notification
+    function showNotification(message, type) {
+        const notifications = document.getElementById('notifications');
+        notifications.innerHTML = ''; // Vider les notifications existantes
+
+        const notification = document.createElement('div');
+        notification.textContent = message;
+        notification.style.color = type === 'success' ? 'green' : 'red';
+        notification.className = type === 'success' ? 'success-message' : 'error-message';
+
+        notifications.appendChild(notification);
+
+        // Optionnel : Supprimez la notification après quelques secondes
+        setTimeout(() => {
+            notifications.innerHTML = '';
+        }, 5000); // Supprimer après 5 secondes
+    }
+</script>
+<script>
+    const chatBox = document.getElementById('chatBox');
+    const chatKey = `chatMessages-${joueur.getId()}`; // Clé unique pour chaque joueur
+    const socket = new WebSocket(`ws://192.168.1.167:8082/game_4x/gameUpdates/${joueur.login}`);
+
+    // Charger les messages depuis le localStorage
+    function loadChatMessages() {
+        const savedMessages = localStorage.getItem(chatKey);
+        if (savedMessages) {
+            const messages = JSON.parse(savedMessages);
+            messages.forEach(message => {
+                const messageElement = document.createElement('div');
+                messageElement.textContent = message;
+                chatBox.appendChild(messageElement);
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    }
+
+    // Sauvegarder les messages dans le localStorage
+    function saveChatMessage(message) {
+        let txt = message.replace("flashErreur", "");
+        let txt1 = message.replace("flashSuccess", "");
+        let messages = localStorage.getItem(chatKey);
+        messages = messages ? JSON.parse(messages) : [];
+        messages.push(txt1);
+        localStorage.setItem(chatKey, JSON.stringify(messages));
+    }
+
+    // Écouter les messages du WebSocket
+    socket.onmessage = function (event) {
+        const message = event.data;
+        const messageElement = document.createElement('div');
+        messageElement.textContent = message;
+        chatBox.appendChild(messageElement);
+        chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+
+        saveChatMessage(message); // Sauvegarder dans le localStorage
+
+        if (message.includes("Ville capturée")) {
+            refreshPageWithMeta(1);
+        } else if (message.includes("Le soldat a été déplacé") || message.includes("un ennemi en") || message.includes("capturée par le joueur")) {
+            refreshPageWithMeta(1);
+        }else if (message.includes("flashSuccess")) {
+            let txt = message.replace("flashSuccess", "");
+            refreshPageWithMeta(1);
+            showNotification(txt, 'success');
+        } else if (message.includes("flashErreur")) {
+            let txt = message.replace("flashErreur", "");
+            refreshPageWithMeta(1);
+            showNotification(txt, 'error');
+        }else {
+            if (message === "CLEAR_CHAT") {
+                // Effacer les données du chat
+                chatBox.innerHTML = '';
+                console.log("Chat vidé par le serveur.");
+            } else {
+                // Ajouter le message reçu au chat
+                const messageElement = document.createElement('div');
+                messageElement.textContent = message;
+                chatBox.appendChild(messageElement);
+                chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
+            }
+        }
+    };
+
+    // Envoyer un message via le WebSocket
+    function sendMessage() {
+        const chatInput = document.getElementById('chatInput');
+        const message = chatInput.value.trim();
+
+        if (message) {
+            socket.send(message);
+            chatInput.value = '';
+            saveChatMessage(`Vous: ${message}`); // Sauvegarder les messages envoyés
+        }
+    }
+
+    // Charger les messages sauvegardés au chargement de la page
+    document.addEventListener('DOMContentLoaded', loadChatMessages);
+</script>
 
 <script>
     let lastSubmitted = null; // Garde en mémoire la dernière soumission pour éviter les doublons
@@ -306,41 +454,11 @@
         lastSubmitted = now;
 
         // Définir la direction choisie dans le champ caché
-        document.getElementById('directionInput').value = direction;
+        document.getElementById('directionInput1').value = direction;
         // Soumettre le formulaire
-        document.getElementById('deplacementForm').setAttribute("action", "actions");
-        document.getElementById('deplacementForm').submit();
+        document.getElementById('actionsForm').setAttribute("action", "actions");
+        document.getElementById('actionsForm').submit();
     }
-</script>
-
-<script>
-
-    // Connecter au WebSocket
-    //const playerId = ${joueur.login}; // Id unique du joueur
-    const socket = new WebSocket(`ws://192.168.1.167:8082/game_4x/gameUpdates/${joueur.login}`);
-    //const socket = new WebSocket(`ws://172.20.10.13:8082/game_4x/gameUpdates/${joueur.login}`);
-
-    // Quand une connexion est ouverte
-    socket.onopen = function () {
-        console.log("Connexion WebSocket ouverte.");
-    };
-
-    // Quand un message est reçu
-    socket.onmessage = function (event) {
-        const message = event.data;
-        if (message.includes("Ville capturée")) {
-            alert(message); // Affiche une alerte avec le message de capture
-            refreshPageWithMeta(1); // Rafraîchit la page après une seconde
-        } else if (message.includes("Le soldat a été déplacé") || message.includes("un ennemi en")) {
-            refreshPageWithMeta(1);
-        }
-        console.log("Message reçu : " + message);
-    };
-
-    // Quand une connexion est fermée
-    socket.onclose = function () {
-        console.log("Connexion WebSocket fermée.");
-    };
 
     function refreshPageWithMeta(interval) {
         // Créer l'élément <meta> pour le rafraîchissement

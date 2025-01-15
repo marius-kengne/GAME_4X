@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Random;
 
 @WebServlet(name = "DeplacementController", value = "/deplacerSoldat")
 public class DeplacementController extends HttpServlet {
@@ -71,15 +72,23 @@ public class DeplacementController extends HttpServlet {
             request.setAttribute("erreur", erreur);
             //GameWebSocket.sendToClient(joueur.getLogin(), erreur);
             GameWebSocket.broadcast("Le soldat a été déplacé vers la position X=");
+            request.getSession().setAttribute("flashErreur", "Déplacement impossible. La destination est hors de la carte.");
         } else if ("montagne".equals(destination.getType())) {
             String erreur = "Déplacement bloqué : La tuile est une montagne.";
             request.setAttribute("erreur", erreur);
             //GameWebSocket.sendToClient(joueur.getLogin(), erreur);
             GameWebSocket.broadcast("Le soldat a été déplacé vers la position X=");
+            request.getSession().setAttribute("flashErreur", "Déplacement bloqué : La tuile est une montagne.");
         } else if ("ville".equals(destination.getType()) && destination.getProprietaire() == null) {
             //gestion des villes
             System.out.println("************** gestion ville");
-            int degats = Math.max(soldat.getPointsDAttaque() - destination.getPointsDeDefense(), 0); // Le soldat attaque avec des points aléatoires
+            //int degats = Math.max(soldat.getPointsDAttaque() - destination.getPointsDeDefense(), 0); // Le soldat attaque avec des points aléatoires
+            Random random = new Random();
+            int minDegats = Math.min(soldat.getPointsDAttaque(), destination.getPointsDeDefense());
+            int maxDegats = Math.max(soldat.getPointsDAttaque(), destination.getPointsDeDefense());
+            int degats = random.nextInt(maxDegats - minDegats + 1) + minDegats;
+            System.out.println("************** degats " +degats);
+
             destination.setPointsDeDefense(destination.getPointsDeDefense() - degats);
 
             if (destination.getPointsDeDefense() <= 0) {
@@ -103,8 +112,10 @@ public class DeplacementController extends HttpServlet {
 
                 // Message pour l'utilisateur
                 request.setAttribute("message", "Ville capturée !");
+                request.getSession().setAttribute("flashSuccess", "Ville capturée !");
                 GameWebSocket.broadcast("La ville en X=" + destination.getX() + ", Y=" + destination.getY() + " a été capturée par le joueur " + joueur.getLogin());
             } else {
+                System.out.println("************** ID Ville : " + destination.getId());
                 System.out.println("************** Ville non capturée");
                 // Ville non capturée
                 try (Connection connection = DBConnection.getConnection()) {
@@ -118,8 +129,9 @@ public class DeplacementController extends HttpServlet {
                     throw new RuntimeException("Erreur lors de la mise à jour de la ville après l'attaque.", e);
                 }
 
-                //GameWebSocket.broadcast("Le soldat " + soldat.getId() + " a éliminé un ennemi en X=" + destination.getX() + ", Y=" + destination.getY());
-                request.setAttribute("erreur", "Ville attaquée mais pas encore capturée !");
+                GameWebSocket.broadcast("Le soldat " + soldat.getId() + " a éliminé un ennemi en X=" + destination.getX() + ", Y=" + destination.getY());
+                //request.setAttribute("erreur", "Ville attaquée mais pas encore capturée !");
+                request.getSession().setAttribute("flashErreur", "Ville attaquée mais pas encore capturée !");
             }
 
         } else if (destination.getSoldat() != null && destination.getSoldat().getProprietaire().getId() != joueur.getId()) {
@@ -166,6 +178,7 @@ public class DeplacementController extends HttpServlet {
 
                 // Message pour l'utilisateur
                 request.setAttribute("message", "Soldat ennemi neutralisé !");
+                request.getSession().setAttribute("flashSuccess", "Soldat ennemi neutralisé !");
                 GameWebSocket.broadcast("Le soldat " + soldat.getId() + " a éliminé un ennemi en X=" + destination.getX() + ", Y=" + destination.getY());
             } else {
                 // L'ennemi survit
@@ -183,6 +196,7 @@ public class DeplacementController extends HttpServlet {
 
                 GameWebSocket.broadcast("Le soldat " + soldat.getId() + " a éliminé un ennemi en X=" + destination.getX() + ", Y=" + destination.getY());
                 request.setAttribute("erreur", "Combat en cours. L'ennemi a survécu !");
+                request.getSession().setAttribute("flashErreur", "Combat en cours. L'ennemi a survécu !");
             }
         } else {
             // Déplacement vers une tuile vide
@@ -203,6 +217,7 @@ public class DeplacementController extends HttpServlet {
 
                 connection.commit(); // Confirmer les modifications dans la base de données
                 request.setAttribute("message", "Déplacement effectué avec succès.");
+                request.getSession().setAttribute("flashSuccess", "Déplacement effectué avec succès !");
 
                 final Tuile dest = destination;
                 // Mettez à jour les tuiles et soldats sur la carte
@@ -242,7 +257,14 @@ public class DeplacementController extends HttpServlet {
             // Remettre la carte mise à jour dans le contexte
             getServletContext().setAttribute("carte", carte);
         }*/
-        game.nextPlayer();
+        //game.nextPlayer();
+        joueur = Joueur.getJoueurById(joueur.getId());
+        try {
+            joueur = Joueur.chargerSoldatJoueur(joueur);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        session.setAttribute("joueur", joueur);
         Object tourActuel = session.getAttribute("tourActuel");
         if (tourActuel == null){
             session.setAttribute("tourActuel", 0);

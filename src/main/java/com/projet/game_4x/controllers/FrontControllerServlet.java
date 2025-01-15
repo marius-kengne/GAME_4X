@@ -57,6 +57,14 @@ public class FrontControllerServlet extends HttpServlet {
         // Récupérer l'instance globale de jeu
         Game game = Game.getInstance();
 
+        HttpSession session = request.getSession();
+        Joueur joueur = (Joueur) session.getAttribute("joueur");
+
+        if (joueur == null) {
+            response.sendRedirect("login");
+            return;
+        }
+
         // Charger ou générer une carte si nécessaire
         synchronized (game) {
             if (game.getCarte() == null) {
@@ -66,8 +74,8 @@ public class FrontControllerServlet extends HttpServlet {
             }
         }
 
-        HttpSession session = request.getSession();
-        Joueur joueur = (Joueur) session.getAttribute("joueur");
+        //HttpSession session = request.getSession();
+        //Joueur joueur = (Joueur) session.getAttribute("joueur");
         //Integer joueurId = (Integer) session.getAttribute("playerId");
         Integer joueurId = joueur.getId();
 

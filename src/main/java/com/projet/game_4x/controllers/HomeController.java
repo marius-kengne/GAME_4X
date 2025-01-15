@@ -16,8 +16,11 @@ public class HomeController extends HttpServlet {
 
         HttpSession session = request.getSession();
         Joueur joueur = (Joueur) session.getAttribute("joueur");
-        /*if (joueur == null)
-            response.sendRedirect("login");*/
+
+        if (joueur == null) {
+            response.sendRedirect("login");
+            return;
+        }
         request.getRequestDispatcher("Views/home.jsp").forward(request, response);
     }
 

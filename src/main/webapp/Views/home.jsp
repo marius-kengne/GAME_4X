@@ -17,7 +17,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f7f7f7;
+            background-color: #28a745;
             margin: 0;
             display: flex;
             flex-direction: column;

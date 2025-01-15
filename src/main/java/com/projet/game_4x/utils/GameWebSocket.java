@@ -77,4 +77,8 @@ public class GameWebSocket {
             }
         }
     }
+
+    public static void clearChat() {
+        broadcast("CLEAR_CHAT"); // Envoyer un message spécial pour vider les données
+    }
 }

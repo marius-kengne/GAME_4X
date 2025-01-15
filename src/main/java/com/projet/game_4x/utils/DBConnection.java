@@ -17,16 +17,4 @@ public class DBConnection {
         }
         return DriverManager.getConnection(URL, USER, PASSWORD);
     }
-
-    /*
-    public static void main(String[] args) {
-        try (Connection connection = getConnection()) {
-            System.out.println("Connexion réussie à la base de données!");
-        } catch (SQLException e) {
-            System.err.println("Erreur lors de la connexion à la base de données : " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-     */
 }
